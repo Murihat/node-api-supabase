@@ -26,11 +26,11 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 // Basic Auth for all routes
-app.use(basicAuth({
-  users: { [process.env.API_USERNAME]: process.env.API_PASSWORD },
-  challenge: true,
-  unauthorizedResponse: (req) => ({ error: 'Unauthorized' })
-}))
+// app.use(basicAuth({
+//   users: { [process.env.API_USERNAME]: process.env.API_PASSWORD },
+//   challenge: true,
+//   unauthorizedResponse: (req) => ({ error: 'Unauthorized' })
+// }))
 
 // Router
 const employeeRouter = require('./routes/employee')
