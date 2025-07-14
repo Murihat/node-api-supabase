@@ -1,10 +1,13 @@
 require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
-const basicAuth = require('express-basic-auth')
+// const basicAuth = require('express-basic-auth')
 
 const app = express()
 const port = process.env.PORT || 3000
+
+// Serve static files (CSS, images, JS)
+app.use(express.static(__dirname + '/public'))
 
 // CORS setup
 app.use(cors({
@@ -13,7 +16,7 @@ app.use(cors({
   credentials: false
 }))
 
-// Timeout middleware (1 minute)
+// Timeout middleware
 app.use((req, res, next) => {
   res.setTimeout(60000, () => {
     return res.status(503).json({ error: 'Request timeout. Please try again.' })
@@ -25,14 +28,16 @@ app.use((req, res, next) => {
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-// Basic Auth for all routes
-// app.use(basicAuth({
-//   users: { [process.env.API_USERNAME]: process.env.API_PASSWORD },
-//   challenge: true,
-//   unauthorizedResponse: (req) => ({ error: 'Unauthorized' })
-// }))
+// Basic Auth (optional)
+/*
+app.use(basicAuth({
+  users: { [process.env.API_USERNAME]: process.env.API_PASSWORD },
+  challenge: true,
+  unauthorizedResponse: () => ({ error: 'Unauthorized' })
+}))
+*/
 
-// Router
+// Routes
 const employeeRouter = require('./routes/employee')
 app.use('/employee', employeeRouter)
 const companyRouter = require('./routes/company')
@@ -40,7 +45,7 @@ app.use('/company', companyRouter)
 
 // Default route
 app.get('/', (req, res) => {
-  res.send('Hello from Express + Supabase + Router + Auth!')
+  res.sendFile(__dirname + '/public/views/index.html')
 })
 
 app.listen(port, () => {
