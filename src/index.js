@@ -46,6 +46,10 @@ app.use('/', tokenRouter)
 const loginRouter = require('./routes/login')
 app.use('/', loginRouter)
 
+// Routes Attendance
+const attendanceRouter = require('./routes/attendance')
+app.use('/', attendanceRouter)
+
 // Routes employee
 const employeeRouter = require('./routes/employee')
 app.use('/employee', employeeRouter)

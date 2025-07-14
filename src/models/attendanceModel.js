@@ -1,0 +1,169 @@
+const { supabase } = require('../config/supabase');
+
+// ✅ Ambil lokasi aktif
+async function getValidLocations(employee_id, company_id) {
+  const { data, error } = await supabase
+    .from('tb_attendance_location')
+    .select('*')
+    .eq('is_active', true)
+    .or(`company_id.eq.${company_id},employee_id.eq.${employee_id}`);
+
+  if (error) throw error;
+  return data;
+}
+
+// ✅ Cek apakah sudah clock-in hari ini (UTC)
+async function checkClockInToday(employee_id) {
+  const todayUTC = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+  const { data, error } = await supabase
+    .from('tb_attendance')
+    .select('attendance_id')
+    .eq('employee_id', employee_id)
+    .gte('clock_in', todayUTC)
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data; // null jika belum clock-in
+}
+
+// ✅ Simpan clock-in (insert row baru)
+async function clockInAttendance({
+  employee_id,
+  company_id,
+  attendance_location_id,
+  latitude,
+  longitude,
+  picture_clockin,
+  note
+}) {
+  const now = new Date().toISOString();
+
+  const { error } = await supabase.from('tb_attendance').insert({
+    employee_id,
+    company_id,
+    attendance_location_id,
+    clock_in: now,
+    latitude,
+    longitude,
+    picture_clockin,
+    note,
+    created_at: now
+  });
+
+  if (error) throw error;
+  return true;
+}
+
+// Cek clock-out hari ini (tanpa clock-in)
+async function checkClockOutToday(employee_id) {
+  const todayUTC = new Date().toISOString().slice(0, 10);
+  const { data, error } = await supabase
+    .from('tb_attendance')
+    .select('attendance_id')
+    .eq('employee_id', employee_id)
+    .gte('clock_out', todayUTC)
+    .not('clock_out', 'is', null)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+
+// Update clock-out
+async function clockOutAttendance({ attendance_id, latitude, longitude, picture_clockout, note }) {
+  const now = new Date().toISOString();
+  const { error } = await supabase
+    .from('tb_attendance')
+    .update({
+      clock_out: now,
+      latitude,
+      longitude,
+      picture_clockout,
+      note
+    })
+    .eq('attendance_id', attendance_id);
+  if (error) throw error;
+  return true;
+}
+
+// Insert clock-out tanpa clock-in
+async function insertClockOut({ employee_id, company_id, attendance_location_id, latitude, longitude, picture_clockout, note }) {
+  const now = new Date().toISOString();
+  const { error } = await supabase.from('tb_attendance').insert({
+    employee_id,
+    company_id,
+    attendance_location_id,
+    clock_out: now,
+    latitude,
+    longitude,
+    picture_clockout,
+    note,
+    created_at: now
+  });
+  if (error) throw error;
+  return true;
+}
+
+async function getAttendanceHistory(employee_id, days = 20) {
+  const sinceDate = new Date();
+  sinceDate.setDate(sinceDate.getDate() - days);
+  const sinceISO = sinceDate.toISOString();
+
+  const { data, error } = await supabase
+  .from('tb_attendance')
+  .select(`
+    attendance_id,
+    attendance_location_id,
+    employee_id,
+    company_id,
+    clock_in,
+    clock_out,
+    picture_clockin,
+    picture_clockout,
+    note
+  `)
+  .eq('employee_id', employee_id)
+  .gte('created_at', sinceISO)
+  .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  // Helper konversi ISO string UTC ke string lokal Asia/Jakarta
+  function convertToJakartaTime(isoString) {
+    if (!isoString) return null;
+    const date = new Date(isoString);
+    return date.toLocaleString('en-GB', {
+      timeZone: 'Asia/Jakarta',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+  }
+
+  const convertedData = data.map(item => ({
+    ...item,
+    clock_in_jakarta: convertToJakartaTime(item.clock_in),
+    clock_out_jakarta: convertToJakartaTime(item.clock_out)
+  }));
+
+  return convertedData;
+}
+
+
+
+module.exports = {
+  getValidLocations,
+  checkClockInToday,
+  clockInAttendance,
+  checkClockOutToday,
+  clockOutAttendance,
+  insertClockOut,
+  getAttendanceHistory,
+};
