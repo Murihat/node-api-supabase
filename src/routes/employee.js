@@ -1,13 +1,7 @@
 const express = require('express')
 const router = express.Router()
 
-const { createClient } = require('@supabase/supabase-js')
-
-// Inisialisasi Supabase
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-)
+const { supabase } = require('../config/supabase')
 
 // GET /employee → ambil semua data employee
 router.get('/', async (req, res) => {

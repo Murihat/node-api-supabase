@@ -37,9 +37,20 @@ app.use(basicAuth({
 }))
 */
 
-// Routes
+
+// Routes Validate Token
+const tokenRouter = require('./routes/token')
+app.use('/', tokenRouter)
+
+// Routes Login
+const loginRouter = require('./routes/login')
+app.use('/', loginRouter)
+
+// Routes employee
 const employeeRouter = require('./routes/employee')
 app.use('/employee', employeeRouter)
+
+// Routescompany
 const companyRouter = require('./routes/company')
 app.use('/company', companyRouter)
 
