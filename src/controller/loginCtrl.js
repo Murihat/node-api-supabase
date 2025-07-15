@@ -14,7 +14,12 @@ async function loginCtrl(req, res) {
     const user = await findUserByEmailAndPassword(email, hashed)
 
     if (!user) {
-      return errorResponse(res, 401, 'Invalid email or password')
+        return successResponse(res, {
+            code: 200,
+            status: false,
+            message: 'Invalid email or password',
+            data: {}
+        });
     }
 
     const employeeId = user.employee_id
@@ -31,16 +36,27 @@ async function loginCtrl(req, res) {
 
     const inserted = await createLoginToken(employeeId, token, expiredAt)
     if (!inserted) {
-      return errorResponse(res, 500, 'Failed to create token')
+        return successResponse(res, {
+            code: 200,
+            status: false,
+            message: 'Failed to create token',
+            data: {}
+        });
     }
 
-    return successResponse(res, 200, 'Login successful', {
-      token,
-      expiredAt: expiredAt.toISOString()
-    })
+
+    return successResponse(res, {
+        code: 200,
+        status: true,
+        message: 'Berhasil Login',
+        data: {
+            token,
+            expiredAt: expiredAt.toISOString()
+        }
+    });
   } catch (err) {
     console.error('❌ loginCtrl error:', err)
-    return errorResponse(res, 500, 'Internal server error', err?.message)
+    return errorResponse(res, 500, err?.message)
   }
 }
 
