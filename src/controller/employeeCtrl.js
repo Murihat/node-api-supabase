@@ -4,20 +4,23 @@ const { successResponse, errorResponse } = require('../helpers/response')
 const getEmployeeDetailCtrl = async (req, res) => {
     try {
       const token = req.query.token;
+      if (!token) return errorResponse(res, 401, 'Unauthorized, token tidak ditemukan');
   
-      if (!token) {
-        return errorResponse(res, 401, 'Unauthorized, token tidak ditemukan');
+      const result = await getEmployeeDetailByToken(token);
+  
+      // Error dari model
+      if (result.error) {
+        console.warn('⚠️', result.error);
+        return errorResponse(res, 403, result.error);
       }
   
-      const employeeData = await getEmployeeDetailByToken(token);
-  
-      return successResponse(res, 200, 'Data employee ditemukan', employeeData);
+      return successResponse(res, 200, 'Data employee ditemukan', result.data);
   
     } catch (error) {
-      console.error('Error getEmployeeDetail:', error.message);
-      return errorResponse(res, 500, error.message);
+      console.error('❌ Error getEmployeeDetail:', error.message);
+      return errorResponse(res, 500, 'Terjadi kesalahan server', error.message);
     }
-};
+  };
 
 
 module.exports = {
