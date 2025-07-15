@@ -35,6 +35,7 @@ async function validateTokenCtrl(req, res) {
         token,
         expiredAt: expiredAt.toISOString(),
         remainingDays,
+        extends: remainingDays <= 3 ? true : false,
       }
     )
   } catch (err) {
