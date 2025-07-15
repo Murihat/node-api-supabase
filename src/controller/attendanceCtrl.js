@@ -9,12 +9,22 @@ const {
 } = require('../models/attendanceModel');
 const { successResponse, errorResponse } = require('../helpers/response');
 const haversine = require('../helpers/haversine');
+const { getEmployeeDetailByToken } = require('../models/employeeModel');
 
 async function attendanceCtrl(req, res) {
-  const { employee_id, company_id, latitude, longitude, picture, note, type } = req.body;
+  const { token, latitude, longitude, picture, note, type } = req.body;
+
+
+  // Validasi token
+  if (!token) return successResponse(res, {
+    code: 200,
+    status: false,
+    message: 'Unauthorized, token tidak ditemukan',
+    data: {}
+  });
 
   // Validasi input wajib
-  if (!employee_id || !latitude || !longitude || !type) {
+  if (!latitude || !longitude || !type) {
     return successResponse(res, {
       code: 200,
       status: false,
@@ -42,6 +52,19 @@ async function attendanceCtrl(req, res) {
   }
 
   try {
+
+    // Ambil employee detail dari token
+    const { data: employeeData, error } = await getEmployeeDetailByToken(token);
+
+    if (error) return successResponse(res, {
+      code: 200,
+      status: false,
+      message: error,
+      data: {}
+    });
+
+    const { employee_id, company_id } = employeeData;
+
     // Ambil lokasi aktif dan validasi radius
     const locations = await getValidLocations(employee_id, company_id);
     if (!locations.length) return successResponse(res, {
@@ -169,31 +192,45 @@ async function attendanceCtrl(req, res) {
 }
 
 async function attendanceHistoryCtrl(req, res) {
-  const { employee_id, days } = req.body;
+  const { token, days } = req.body;
   const daysNumber = days ? parseInt(days) : 20; // default 20 hari
 
-  if (!employee_id) {
+  if (!token) {
     return successResponse(res, {
       code: 200,
       status: false,
-      message: 'Employee ID diperlukan',
+      message: 'Unauthorized, token tidak ditemukan',
       data: {}
     });
   }
 
   try {
+    const { data: employeeData, error } = await getEmployeeDetailByToken(token);
+
+    if (error) return successResponse(res, {
+      code: 200,
+      status: false,
+      message: error,
+      data: {}
+    });
+
+    const { employee_id } = employeeData;
+
     const history = await getAttendanceHistory(employee_id, daysNumber);
+
     return successResponse(res, {
       code: 200,
       status: true,
       message: 'Riwayat absensi berhasil diambil',
       data: history
     });
-  } catch (error) {
-    console.error('Error ambil riwayat absensi:', error);
-    return errorResponse(res, 500, error.message );
+    
+  } catch (err) {
+    console.error('❌ Error ambil riwayat absensi:', err.message);
+    return errorResponse(res, 500, err.message);
   }
 }
+
 
 
 
