@@ -52,7 +52,7 @@ app.use('/', attendanceRouter)
 
 // Routes employee
 const employeeRouter = require('./routes/employee')
-app.use('/employee', employeeRouter)
+app.use('/', employeeRouter)
 
 // Routescompany
 const companyRouter = require('./routes/company')
