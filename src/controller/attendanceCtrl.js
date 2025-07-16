@@ -193,7 +193,7 @@ async function attendanceCtrl(req, res) {
 
 async function attendanceHistoryCtrl(req, res) {
   const { token, days } = req.body;
-  const daysNumber = days ? parseInt(days) : 20; // default 20 hari
+  const daysNumber = days ? parseInt(days) : 31;
 
   if (!token) {
     return successResponse(res, {

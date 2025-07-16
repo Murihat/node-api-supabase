@@ -107,7 +107,7 @@ async function insertClockOut({ employee_id, company_id, attendance_location_id,
   return true;
 }
 
-async function getAttendanceHistory(employee_id, days = 20) {
+async function getAttendanceHistory(employee_id, days = 31) {
   const sinceDate = new Date();
   sinceDate.setDate(sinceDate.getDate() - days);
   const sinceISO = sinceDate.toISOString();
