@@ -193,7 +193,7 @@ async function attendanceCtrl(req, res) {
 
 async function attendanceHistoryCtrl(req, res) {
   const { token, days } = req.body;
-  const daysNumber = days ? parseInt(days) : 20; // default 20 hari
+  const daysNumber = days ? parseInt(days) : 31;
 
   if (!token) {
     return successResponse(res, {
@@ -218,6 +218,15 @@ async function attendanceHistoryCtrl(req, res) {
 
     const history = await getAttendanceHistory(employee_id, daysNumber);
 
+    if (!history || history.length === 0) {
+      return successResponse(res, {
+        code: 200,
+        status: false,
+        message: 'Tidak ada riwayat absensi ditemukan',
+        data: []
+      });
+    }
+
     return successResponse(res, {
       code: 200,
       status: true,
@@ -230,6 +239,7 @@ async function attendanceHistoryCtrl(req, res) {
     return errorResponse(res, 500, err.message);
   }
 }
+
 
 
 
