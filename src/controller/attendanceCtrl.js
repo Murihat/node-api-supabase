@@ -143,7 +143,7 @@ async function attendanceCtrl(req, res) {
 
         return successResponse(res, {
           code: 200,
-          status: false,
+          status: true,
           message: 'Clock-out berhasil',
           data: {
             location: validLocation.location_name,
