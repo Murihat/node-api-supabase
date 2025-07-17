@@ -1,5 +1,22 @@
 const { supabase } = require('../config/supabase');
 
+const getEmployeeByEmail = async (email) => {
+  const { data, error } = await supabase
+    .from('tb_employee')
+    .select('employee_id')
+    .eq('email', email);
+
+  if (error) {
+    return { error: `Gagal mendapatkan employee: ${error.message}`};
+  }
+
+  if (data.length > 0) {
+    return { error: "Employee sudah terdaftar"};
+  }
+
+  return { error: null };
+};
+
 
 // Ambil employee detail dari token
 const getEmployeeDetailByToken = async (token) => {
@@ -47,4 +64,5 @@ const getEmployeeDetailByToken = async (token) => {
   
 module.exports = {
     getEmployeeDetailByToken,
+    getEmployeeByEmail,
 };
