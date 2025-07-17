@@ -13,7 +13,4 @@ router.post('/cekemployee', employeeCtrl.cekEmployeeCtrl);
 // post insert employee superadmin
 router.post('/insertsuperadmin', employeeCtrl.insertSuperadminCtrl);
 
-
-
-
 module.exports = router

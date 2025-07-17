@@ -1,4 +1,4 @@
-const { getEmployeeDetailByToken, getEmployeeByEmail } = require('../models/employeeModel');
+const { getEmployeeDetailByToken, getEmployeeByEmail, insertEmployee} = require('../models/employeeModel');
 const { successResponse, errorResponse } = require('../helpers/response')
 const { hashPassword } = require('../helpers/tokenHelper')
 
@@ -129,7 +129,7 @@ const getEmployeeDetailCtrl = async (req, res) => {
     };
 
     // ✅ Insert ke database
-    const { data, error } = await model.insertEmployee(payload);
+    const { data, error } = await insertEmployee(payload);
 
     if (error) {
       console.error('❌ Error insert employee:', error.message);

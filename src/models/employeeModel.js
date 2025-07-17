@@ -61,8 +61,17 @@ const getEmployeeDetailByToken = async (token) => {
     };
   };
   
+
+  const insertEmployee = async (payload) => {
+  return await supabase
+    .from('tb_employee')
+    .insert(payload)
+    .select()
+    .single();
+};
   
 module.exports = {
     getEmployeeDetailByToken,
     getEmployeeByEmail,
+    insertEmployee,
 };
