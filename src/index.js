@@ -60,7 +60,7 @@ app.use('/', employeeRouter)
 
 // Routescompany
 const companyRouter = require('./routes/company')
-app.use('/company', companyRouter)
+app.use('/', companyRouter)
 
 // Default route
 app.get('/', (req, res) => {
