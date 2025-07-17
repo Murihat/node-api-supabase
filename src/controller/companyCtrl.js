@@ -7,6 +7,37 @@ const {
   
   const { getPlanById } = require('../models/planModel');
   const { successResponse } = require('../helpers/response');
+
+ // ✅ CREATE COMPANY ONLY
+  const cekCompanyController = async (req, res) => {
+    const company  = req.body;
+  
+    // Step 1: Cek company sudah ada
+    const { exists, data: existingData, error: checkError } = await checkCompanyExists({
+      identity_company: company.identity_company,
+      name: company.name,
+      email: company.email,
+      identity_owner: company.identity_owner,
+    });
+  
+    if (checkError) {
+      console.error('Cek company error:', checkError);
+      return successResponse(res, {
+        code: 200, status: false, message: checkError, data: {}
+      });
+    }
+  
+    if (exists) {
+      return successResponse(res, {
+        code: 200, status: false, message: 'Company sudah terdaftar', data: {}
+      });
+    }
+
+    return successResponse(res, {
+      code: 200, status: true, message: '✅ CREATE COMPANY', data: {}
+    });
+  }
+
   
   // ✅ CREATE COMPANY ONLY
   const createCompanyController = async (req, res) => {
@@ -17,6 +48,7 @@ const {
       identity_company: company.identity_company,
       name: company.name,
       email: company.email,
+      identity_owner: company.identity_owner,
     });
   
     if (checkError) {
@@ -115,6 +147,7 @@ const {
   
   // ✅ EXPORT
   module.exports = {
+    cekCompanyController,
     createCompanyController,
     checkCompanySubscriptionController,
     createSubscriptionController

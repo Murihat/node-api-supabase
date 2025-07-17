@@ -2,6 +2,8 @@ const express = require('express')
 const router = express.Router()
 const companyCtrl = require('../controller/companyCtrl');
 
+
+router.post('/company/cekcompany', companyCtrl.cekCompanyController);
 router.post('/company/create', companyCtrl.createCompanyController);
 router.get('/company/ceksubscompany:id', companyCtrl.checkCompanySubscriptionController);
 router.post('/company/subscription', companyCtrl.createSubscriptionController);

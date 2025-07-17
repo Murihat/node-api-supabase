@@ -1,11 +1,11 @@
 const { supabase } = require('../config/supabase');
 
 // CEK COMPANY BERDASARKAN identity_company, name, email
-const checkCompanyExists = async ({ identity_company, name, email }) => {
+const checkCompanyExists = async ({ identity_company, name, email, identity_owner }) => {
     const { data, error } = await supabase
       .from('tb_company')
       .select('*')
-      .or(`identity_company.eq.${identity_company},name.eq.${name},email.eq.${email}`);
+      .or(`identity_company.eq.${identity_company},name.eq.${name},email.eq.${email},identity_owner.eq.${identity_owner}`);
   
     if (error) return { error: `Gagal cek data company: ${error.message}` };
   
