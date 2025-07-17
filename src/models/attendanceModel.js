@@ -108,30 +108,41 @@ async function insertClockOut({ employee_id, company_id, attendance_location_id,
 }
 
 async function getAttendanceHistory(employee_id, days = 31) {
-  const sinceDate = new Date();
-  sinceDate.setDate(sinceDate.getDate() - days);
-  const sinceISO = sinceDate.toISOString();
+  const now = new Date();
 
-  const { data, error } = await supabase
-  .from('tb_attendance')
-  .select(`
-    attendance_id,
-    attendance_location_id,
-    employee_id,
-    company_id,
-    clock_in,
-    clock_out,
-    picture_clockin,
-    picture_clockout,
-    note
-  `)
-  .eq('employee_id', employee_id)
-  .gte('created_at', sinceISO)
-  .order('created_at', { ascending: false });
+  let query = supabase
+    .from('tb_attendance')
+    .select(`
+      attendance_id,
+      attendance_location_id,
+      employee_id,
+      company_id,
+      clock_in,
+      clock_out,
+      picture_clockin,
+      picture_clockout,
+      note
+    `)
+    .eq('employee_id', employee_id);
+
+  if (days === 0 || days === 1) {
+    // Filter hanya untuk hari ini (00:00 - 23:59)
+    const todayStart = new Date(now.setHours(0, 0, 0, 0)).toISOString();
+    const tomorrowStart = new Date(new Date().setHours(24, 0, 0, 0)).toISOString();
+    query = query.gte('created_at', todayStart).lt('created_at', tomorrowStart);
+  } else {
+    const sinceDate = new Date();
+    sinceDate.setDate(sinceDate.getDate() - days);
+    const sinceISO = sinceDate.toISOString();
+    query = query.gte('created_at', sinceISO);
+  }
+
+  query = query.order('created_at', { ascending: false });
+
+  const { data, error } = await query;
 
   if (error) throw error;
 
-  // Helper konversi ISO string UTC ke string lokal Asia/Jakarta
   function convertToJakartaTime(isoString) {
     if (!isoString) return null;
     const date = new Date(isoString);
@@ -155,6 +166,7 @@ async function getAttendanceHistory(employee_id, days = 31) {
 
   return convertedData;
 }
+
 
 
 
