@@ -29,11 +29,21 @@ async function createCompanySubscription(payload) {
     return await supabase.from('tb_company_subscription').insert([payload]).select('*').single();
 }
 
+const getCompanyActiveSubscription = async (company_id) => {
+  return await supabase
+    .from('tb_company_subscription')
+    .select('*')
+    .eq('company_id', company_id)
+    .eq('is_active', true);
+};
+
+
 module.exports = {
   getAllPlans,
   getPlanById,
   createPlan,
   updatePlan,
   deletePlan,
-  createCompanySubscription
+  createCompanySubscription,
+  getCompanyActiveSubscription
 };

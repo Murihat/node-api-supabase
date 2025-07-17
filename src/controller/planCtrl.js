@@ -20,18 +20,51 @@ async function getCompanyPlanById(req, res) {
 
 // CREATE SUBSCRIPTION
 async function createSubscription(req, res) {
-  const { company_id, company_plan_id, start_date, end_date } = req.body;
+  const { company_id, company_plan_id } = req.body;
 
   const { data: plan, error: planError } = await model.getPlanById(company_plan_id);
   if (planError || !plan) {
-    return successResponse(res, { code: 200, status: false, message: 'Plan not found', data: {} });
+    return successResponse(res, {
+      code: 200,
+      status: false,
+      message: 'Plan tidak ditemukan',
+      data: {}
+    });
   }
+
+
+  // ✅ Step 2: Cek apakah company sudah punya subscription aktif
+  const { data: existingSub, error: subError } = await model.getCompanyActiveSubscription(company_id);
+  if (subError) {
+    return successResponse(res, {
+      code: 200,
+      status: false,
+      message: `Gagal cek subscription: ${subError.message}`,
+      data: {}
+    });
+  }
+
+  if (existingSub && existingSub.length > 0) {
+    return successResponse(res, {
+      code: 200,
+      status: false,
+      message: 'Company sudah memiliki subscription aktif',
+      data: {}
+    });
+  }
+
+  // ✅ Tanggal start & end
+  const start_date = new Date();
+  const end_date = new Date();
+  end_date.setMonth(end_date.getMonth() + 1);
+
+  const formatDate = (date) => date.toISOString().split('T')[0];
 
   const payload = {
     company_id,
-    company_plan_id,
-    start_date,
-    end_date,
+    company_plan_id: plan.company_plan_id,
+    start_date: formatDate(start_date),
+    end_date: formatDate(end_date),
     is_active: true,
     plan_name: plan.plan_name,
     plan_price: plan.price_month,
@@ -40,10 +73,13 @@ async function createSubscription(req, res) {
   };
 
   const { data, error } = await model.createCompanySubscription(payload);
-  if (error) return successResponse(res, { code: 200, status: false, message: error.message, data: {} });
+  if (error) {
+    return successResponse(res, { code: 200, status: false, message: error.message, data: {} });
+  }
 
-  return successResponse(res, { code: 200, status: true, message: 'Company subscription created', data });
+  return successResponse(res, { code: 200, status: true, message: '✅ Company subscription berhasil dibuat', data });
 }
+
 
 module.exports = {
   getAllCompanyPlans,
