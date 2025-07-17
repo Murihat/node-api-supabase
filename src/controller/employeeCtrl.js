@@ -1,5 +1,7 @@
 const { getEmployeeDetailByToken, getEmployeeByEmail } = require('../models/employeeModel');
 const { successResponse, errorResponse } = require('../helpers/response')
+const { hashPassword } = require('../helpers/tokenHelper')
+
 
 
 const cekEmployeeCtrl = async (req, res) => {
@@ -95,7 +97,67 @@ const getEmployeeDetailCtrl = async (req, res) => {
   };
 
 
+  const insertSuperadminCtrl = async (req, res) => {
+  try {
+    const { name, phone, email, password, company_id } = req.body;
+
+    // ✅ Validasi input sederhana
+    if (!name || !phone || !email || !password || !company_id) {
+      return successResponse(res, {
+        code: 200,
+        status: false,
+        message: 'Semua field wajib diisi',
+        data: {}
+      });
+    }
+
+    // ✅ Format join_date
+    const join_date = new Date().toISOString().split('T')[0]; // format YYYY-MM-DD
+
+    const hashed = hashPassword(password)
+
+
+    // ✅ Payload insert
+    const payload = {
+      name,
+      phone,
+      email,
+      password: hashed,
+      company_id,
+      employee_level_id: 7, //superadmin
+      join_date
+    };
+
+    // ✅ Insert ke database
+    const { data, error } = await model.insertEmployee(payload);
+
+    if (error) {
+      console.error('❌ Error insert employee:', error.message);
+      return successResponse(res, {
+        code: 200,
+        status: false,
+        message: error.message,
+        data: {}
+      });
+    }
+
+    return successResponse(res, {
+      code: 200,
+      status: true,
+      message: '✅ Employee berhasil ditambahkan',
+      data
+    });
+
+  } catch (error) {
+    console.error('❌ Error insertEmployee:', error.message);
+    return errorResponse(res, 500, 'Terjadi kesalahan server', error.message);
+  }
+};
+
+
+
 module.exports = {
     cekEmployeeCtrl,
     getEmployeeDetailCtrl,
+    insertSuperadminCtrl,
 };
