@@ -126,7 +126,6 @@ async function getAttendanceHistory(employee_id, days = 31) {
     .eq('employee_id', employee_id);
 
   if (days === 0 || days === 1) {
-    // Filter hanya untuk hari ini (00:00 - 23:59)
     const todayStart = new Date(now.setHours(0, 0, 0, 0)).toISOString();
     const tomorrowStart = new Date(new Date().setHours(24, 0, 0, 0)).toISOString();
     query = query.gte('created_at', todayStart).lt('created_at', tomorrowStart);
@@ -140,8 +139,9 @@ async function getAttendanceHistory(employee_id, days = 31) {
   query = query.order('created_at', { ascending: false });
 
   const { data, error } = await query;
-
   if (error) throw error;
+
+  if (!data || data.length === 0) return [];
 
   function convertToJakartaTime(isoString) {
     if (!isoString) return null;
@@ -166,6 +166,7 @@ async function getAttendanceHistory(employee_id, days = 31) {
 
   return convertedData;
 }
+
 
 
 
