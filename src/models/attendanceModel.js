@@ -29,7 +29,7 @@ async function checkClockInToday(employee_id) {
 }
 
 // ✅ Simpan clock-in (insert row baru)
-async function clockInAttendance({
+async function insertClockIn({
   employee_id,
   company_id,
   attendance_location_id,
@@ -56,6 +56,25 @@ async function clockInAttendance({
   return true;
 }
 
+// Update clock-in
+async function clockInUpdateAttendance({ attendance_id, latitude, longitude, attendance_location_id, picture_clockin, note }) {
+  const now = new Date().toISOString();
+  const { error } = await supabase
+    .from('tb_attendance')
+    .update({
+      clock_in: now,
+      latitude,
+      longitude,
+      attendance_location_id,
+      picture_clockin,
+      note
+    })
+    .eq('attendance_id', attendance_id);
+  if (error) throw error;
+  return true;
+}
+
+
 // Cek clock-out hari ini (tanpa clock-in)
 async function checkClockOutToday(employee_id) {
   const todayUTC = new Date().toISOString().slice(0, 10);
@@ -73,16 +92,17 @@ async function checkClockOutToday(employee_id) {
 
 
 // Update clock-out
-async function clockOutAttendance({ attendance_id, latitude, longitude, picture_clockout, note }) {
+async function clockOutUpdateAttendance({ attendance_id, latitude, longitude, attendance_location_id_clockout, picture_clockout, note }) {
   const now = new Date().toISOString();
   const { error } = await supabase
     .from('tb_attendance')
     .update({
       clock_out: now,
-      latitude,
-      longitude,
+      latitude_clockout:latitude,
+      longitude_clockout:longitude,
+      attendance_location_id_clockout,
       picture_clockout,
-      note
+      note_clockout:note,
     })
     .eq('attendance_id', attendance_id);
   if (error) throw error;
@@ -90,17 +110,17 @@ async function clockOutAttendance({ attendance_id, latitude, longitude, picture_
 }
 
 // Insert clock-out tanpa clock-in
-async function insertClockOut({ employee_id, company_id, attendance_location_id, latitude, longitude, picture_clockout, note }) {
+async function insertClockOut({ employee_id, company_id, attendance_location_id_clockout, latitude, longitude, picture_clockout, note }) {
   const now = new Date().toISOString();
   const { error } = await supabase.from('tb_attendance').insert({
     employee_id,
     company_id,
-    attendance_location_id,
     clock_out: now,
-    latitude,
-    longitude,
+    latitude_clockout:latitude,
+    longitude_clockout:longitude,
+    attendance_location_id_clockout,
     picture_clockout,
-    note,
+    note_clockout:note,
     created_at: now
   });
   if (error) throw error;
@@ -112,17 +132,7 @@ async function getAttendanceHistory(employee_id, days = 31) {
 
   let query = supabase
     .from('tb_attendance')
-    .select(`
-      attendance_id,
-      attendance_location_id,
-      employee_id,
-      company_id,
-      clock_in,
-      clock_out,
-      picture_clockin,
-      picture_clockout,
-      note
-    `)
+    .select('*')
     .eq('employee_id', employee_id);
 
   if (days === 0 || days === 1) {
@@ -174,9 +184,10 @@ async function getAttendanceHistory(employee_id, days = 31) {
 module.exports = {
   getValidLocations,
   checkClockInToday,
-  clockInAttendance,
+  clockInUpdateAttendance,
   checkClockOutToday,
-  clockOutAttendance,
+  clockOutUpdateAttendance,
+  insertClockIn,
   insertClockOut,
   getAttendanceHistory,
 };

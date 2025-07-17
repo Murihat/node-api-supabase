@@ -1,9 +1,10 @@
 const {
   getValidLocations,
-  clockInAttendance,
-  clockOutAttendance,
+  clockInUpdateAttendance,
+  clockOutUpdateAttendance,
   checkClockInToday,
   checkClockOutToday,
+  insertClockIn,
   insertClockOut,
   getAttendanceHistory, 
 } = require('../models/attendanceModel');
@@ -13,7 +14,6 @@ const { getEmployeeDetailByToken } = require('../models/employeeModel');
 
 async function attendanceCtrl(req, res) {
   const { token, latitude, longitude, picture, note, type } = req.body;
-
 
   // Validasi token
   if (!token) return successResponse(res, {
@@ -92,14 +92,24 @@ async function attendanceCtrl(req, res) {
     if (type === 'clock_in') {
       // Cek sudah clock-in hari ini
       const existingClockIn = await checkClockInToday(employee_id);
+
       if (existingClockIn) return successResponse(res, {
         code: 200,
         status: false,
         message: 'Clock-in sudah dilakukan hari ini',
         data: {}
       });
-      
-      await clockInAttendance({
+
+
+      const clockoutInRow = await checkClockOutToday(employee_id);
+      if (clockoutInRow)  return successResponse(res, {
+        code: 200,
+        status: false,
+        message: 'Clock-out sudah dilakukan hari ini',
+        data: {}
+      });
+     
+      await insertClockIn({
         employee_id,
         company_id,
         attendance_location_id: validLocation.attendance_location_id,
@@ -108,6 +118,7 @@ async function attendanceCtrl(req, res) {
         picture_clockin: picture,
         note
       });
+      
 
       return successResponse(res, {
         code: 200,
@@ -120,21 +131,26 @@ async function attendanceCtrl(req, res) {
         }
       });
 
-    } else if (type === 'clock_out') {
+    } 
+    
+    
+    if (type === 'clock_out') {
       // Cek clock-in hari ini
       const clockInRow = await checkClockInToday(employee_id);
 
       if (clockInRow) {
         // Cek sudah clock-out
-        if (clockInRow.clock_out)  return successResponse(res, {
+        const clockoutInRow = await checkClockOutToday(employee_id);
+        if (clockoutInRow)  return successResponse(res, {
           code: 200,
           status: false,
           message: 'Clock-out sudah dilakukan hari ini',
           data: {}
         });
         
-        await clockOutAttendance({
+        await clockOutUpdateAttendance({
           attendance_id: clockInRow.attendance_id,
+          attendance_location_id_clockout: validLocation.attendance_location_id,
           latitude,
           longitude,
           picture_clockout: picture,
@@ -152,21 +168,12 @@ async function attendanceCtrl(req, res) {
           }
         });
       }
-
-      // Jika belum ada clock-in, cek clock-out sudah ada hari ini?
-      const clockOutRow = await checkClockOutToday(employee_id);
-      if (clockOutRow) return successResponse(res, {
-        code: 200,
-        status: false,
-        message: 'Clock-out sudah dilakukan hari ini',
-        data: {}
-      });
       
       // Insert clock-out tanpa clock-in
       await insertClockOut({
         employee_id,
         company_id,
-        attendance_location_id: validLocation.attendance_location_id,
+        attendance_location_id_clockout: validLocation.attendance_location_id,
         latitude,
         longitude,
         picture_clockout: picture,
@@ -184,6 +191,14 @@ async function attendanceCtrl(req, res) {
         }
       });
     }
+
+
+    return successResponse(res, {
+      code: 200,
+      status: true,
+      message: 'type absensi tidak tersedia',
+      data: {}
+    });
 
   } catch (err) {
     console.error('Attendance error:', err);
