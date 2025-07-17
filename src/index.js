@@ -46,6 +46,10 @@ app.use('/', tokenRouter)
 const loginRouter = require('./routes/login')
 app.use('/', loginRouter)
 
+// Routes Plan Subscribe
+const planRouter = require('./routes/plan');
+app.use('/', planRouter);
+
 // Routes Attendance
 const attendanceRouter = require('./routes/attendance')
 app.use('/', attendanceRouter)
