@@ -6,6 +6,8 @@ const planCtrl = require('../controller/planCtrl')
 const employeeCtrl = require('../controller/employeeCtrl')
 const companyCtrl = require('../controller/companyCtrl');
 const attendanceCtrl = require('../controller/attendanceCtrl')
+const superAdminCtrl = require('../controller/superAdminCtrl')
+
 
 // token
 router.post('/validateToken', tokenCtrl.validateTokenCtrl)
@@ -13,6 +15,9 @@ router.post('/updateToken', tokenCtrl.updateTokenCtrl)
 
 // login
 router.post('/login', loginCtrl.loginAction)
+
+// superadmin
+router.post('/saveSuperadmin', superAdminCtrl.saveSuperadminCtrl)
 
 // employee
 router.get('/employeeDetail', employeeCtrl.getEmployeeDetailCtrl);
