@@ -1,6 +1,6 @@
 const { successResponse, errorResponse } = require('../helpers/response')
 const { hashPassword, generateToken } = require('../helpers/tokenHelper')
-const { getEmployeeDetailByToken} = require('../models/employeeModel');
+const { getEmployeeRoleByEmail} = require('../models/employeeModel');
 const { 
   findUserByEmailAndPassword, 
   getActiveTokenByEmployeeId, 
@@ -51,17 +51,17 @@ async function loginCtrl(req, res) {
         });
     }
 
+     // ✅ Ambil data employee dari database
+    const result = await getEmployeeRoleByEmail(email);
 
-    const result = await getEmployeeDetailByToken(token);
-    // Error dari model
+    // ✅ Handle error dari model
     if (result.error) {
-      console.warn('⚠️', result.error);
       return successResponse(res, {
-          code: 200,
-          status: false,
-          message: result.error,
-          data: {}
-        });
+        code: 200,
+        status: false,
+        message: result.error,
+        data: {}
+      });
     }
 
     return successResponse(res, {
