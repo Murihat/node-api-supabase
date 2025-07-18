@@ -27,7 +27,12 @@ async function getEmployeeRoleByEmail(email) {
         name,
         address
       ),
-      m_employee_level:employee_level_id (
+      m_user_status:user_status_id (
+        user_status_id,
+        status_name,
+        status_code
+      ),
+      m_employee_level:employee_level_id!left  (
         employee_level_id,
         level_name,
         level_code
@@ -40,15 +45,22 @@ async function getEmployeeRoleByEmail(email) {
   if (!data) return { error: 'Data employee tidak ditemukan' };
   if (!data.is_active) return { error: 'Akun karyawan tidak aktif' };
 
-  const { tb_company, m_employee_level, ...flatEmployee } = data;
+  const {
+    tb_company,
+    m_employee_level,
+    m_user_status,
+    ...flatEmployee
+  } = data;
 
   return {
     data: {
       ...flatEmployee,
-      company_name: tb_company?.name || null,
-      company_address: tb_company?.address || null,
-      employee_level_name: m_employee_level?.level_name || null,
-      employee_level_code: m_employee_level?.level_code || null,
+      company_name: tb_company?.name ?? null,
+      company_address: tb_company?.address ?? null,
+      employee_level_name: m_employee_level?.level_name ?? null,
+      employee_level_code: m_employee_level?.level_code ?? null,
+      user_status_name: m_user_status?.status_name ?? null,
+      user_status_code: m_user_status?.status_code ?? null,
     }
   };
 }
@@ -71,11 +83,23 @@ const getEmployeeDetailByToken = async (token) => {
   
     // Step 2: Get employee detail + join
     const { data: employeeData, error: employeeError } = await supabase
-      .from('tb_employee')
-      .select(`
-        *,
-        tb_company:company_id (company_id, name, address),
-        m_employee_level:employee_level_id (employee_level_id, level_name, level_code)
+       .from('tb_employee')
+       .select(`*,
+          tb_company:company_id (
+            company_id,
+            name,
+            address
+          ),
+          m_user_status:user_status_id (
+            user_status_id,
+            status_name,
+            status_code
+          ),
+          m_employee_level:employee_level_id!left (
+            employee_level_id,
+            level_name,
+            level_code
+          )
       `)
       .eq('employee_id', employee_id)
       .single();
@@ -85,15 +109,22 @@ const getEmployeeDetailByToken = async (token) => {
   
     if (!employeeData.is_active) return { error: 'Akun karyawan tidak aktif' };
   
-    const { tb_company, m_employee_level, ...flatEmployee } = employeeData;
-  
+    const {
+      tb_company,
+      m_employee_level,
+      m_user_status,
+      ...flatEmployee
+    } = data;
+
     return {
       data: {
         ...flatEmployee,
-        company_name: tb_company?.name || null,
-        company_address: tb_company?.address || null,
-        employee_level_name: m_employee_level?.level_name || null,
-        employee_level_code: m_employee_level?.level_code || null,
+        company_name: tb_company?.name ?? null,
+        company_address: tb_company?.address ?? null,
+        employee_level_name: m_employee_level?.level_name ?? null,
+        employee_level_code: m_employee_level?.level_code ?? null,
+        user_status_name: m_user_status?.status_name ?? null,
+        user_status_code: m_user_status?.status_code ?? null,
       }
     };
   };

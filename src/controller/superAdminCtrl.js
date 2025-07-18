@@ -107,7 +107,7 @@ const saveSuperadminCtrl = async (req, res) => {
             email: employee.email,
             password: hashed,
             company_id: companyData.company_id,
-            employee_level_id: 7,
+            user_status: 1, // 1 superadmin or 2 employee
             join_date
         };
 

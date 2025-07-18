@@ -67,7 +67,7 @@ async function loginAction(req, res) {
         data: {
             token,
             expiredAt: expiredAt.toISOString(),
-            role: result.data.employee_level_code,
+            role: result.data.employee_level_code ?? result.data.user_status_code,
         }
     });
   } catch (err) {
