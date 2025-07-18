@@ -227,7 +227,7 @@ const getEmployeeDetailByToken = async (token) => {
       m_employee_level,
       m_user_status,
       ...flatEmployee
-    } = data;
+    } = employeeData;
 
     return {
       data: {
