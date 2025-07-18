@@ -29,6 +29,19 @@ async function loginCtrl(req, res) {
         });
     }
 
+     // ✅ Ambil data employee dari database
+    const result = await getEmployeeRoleByEmail(email);
+
+    // ✅ Handle error dari model
+    if (result.error) {
+      return successResponse(res, {
+        code: 200,
+        status: false,
+        message: result.error,
+        data: {}
+      });
+    }
+
     const employeeId = user.employee_id
 
     // 🔍 Check existing active token
@@ -51,18 +64,7 @@ async function loginCtrl(req, res) {
         });
     }
 
-     // ✅ Ambil data employee dari database
-    const result = await getEmployeeRoleByEmail(email);
-
-    // ✅ Handle error dari model
-    if (result.error) {
-      return successResponse(res, {
-        code: 200,
-        status: false,
-        message: result.error,
-        data: {}
-      });
-    }
+    
 
     return successResponse(res, {
         code: 200,
