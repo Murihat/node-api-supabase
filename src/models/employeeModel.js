@@ -39,7 +39,7 @@ const getEmployeeDetailByToken = async (token) => {
       .select(`
         *,
         tb_company:company_id (company_id, name, address),
-        m_employee_level:employee_level_id (employee_level_id, level_name)
+        m_employee_level:employee_level_id (employee_level_id, level_code)
       `)
       .eq('employee_id', employee_id)
       .single();
@@ -56,7 +56,7 @@ const getEmployeeDetailByToken = async (token) => {
         ...flatEmployee,
         company_name: tb_company?.name || null,
         company_address: tb_company?.address || null,
-        employee_level_name: m_employee_level?.level_name || null,
+        employee_level_code: m_employee_level?.level_code || null,
       }
     };
   };

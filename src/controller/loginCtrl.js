@@ -1,6 +1,13 @@
 const { successResponse, errorResponse } = require('../helpers/response')
 const { hashPassword, generateToken } = require('../helpers/tokenHelper')
-const { findUserByEmailAndPassword, getActiveTokenByEmployeeId, deactivateTokenByLoginId, createLoginToken } = require('../models/loginModel')
+const { getEmployeeDetailByToken} = require('../models/employeeModel');
+const { 
+  findUserByEmailAndPassword, 
+  getActiveTokenByEmployeeId, 
+  deactivateTokenByLoginId, 
+  createLoginToken 
+} = require('../models/loginModel')
+
 
 async function loginCtrl(req, res) {
   const { email, password } = req.body
@@ -45,13 +52,26 @@ async function loginCtrl(req, res) {
     }
 
 
+    const result = await getEmployeeDetailByToken(token);
+    // Error dari model
+    if (result.error) {
+      console.warn('⚠️', result.error);
+      return successResponse(res, {
+          code: 200,
+          status: false,
+          message: result.error,
+          data: {}
+        });
+    }
+
     return successResponse(res, {
         code: 200,
         status: true,
         message: 'Berhasil Login',
         data: {
             token,
-            expiredAt: expiredAt.toISOString()
+            expiredAt: expiredAt.toISOString(),
+            role: result.data.employee_level_code,
         }
     });
   } catch (err) {
