@@ -37,30 +37,9 @@ app.use(basicAuth({
 }))
 */
 
-
-// Routes Validate Token
-const tokenRouter = require('./routes/token')
-app.use('/', tokenRouter)
-
-// Routes Login
-const loginRouter = require('./routes/login')
-app.use('/', loginRouter)
-
-// Routes Plan Subscribe
-const planRouter = require('./routes/plan');
-app.use('/', planRouter);
-
-// Routes Attendance
-const attendanceRouter = require('./routes/attendance')
-app.use('/', attendanceRouter)
-
-// Routes employee
-const employeeRouter = require('./routes/employee')
-app.use('/', employeeRouter)
-
-// Routescompany
-const companyRouter = require('./routes/company')
-app.use('/', companyRouter)
+// All Routes
+const router = require('./routes/router')
+app.use('/', router)
 
 // Default route
 app.get('/', (req, res) => {

@@ -1,11 +1,11 @@
-const { validateTokenModel, updateToken } = require('../models/tokenModel')
-const { successResponse, errorResponse } = require('../helpers/response')
+const tokenModel = require('../models/tokenModel')
+const response = require('../helpers/response')
 
 async function validateTokenCtrl(req, res) {
   const token = req.body.token
 
   if (!token) {
-    return successResponse(res, {
+    return response.successResponse(res, {
       code: 200,
       status: false,
       message: 'Token tidak ada',
@@ -14,10 +14,10 @@ async function validateTokenCtrl(req, res) {
   }
 
   try {
-    const { data, error } = await validateTokenModel(token)
+    const { data, error } = await tokenModel.validateTokenModel(token)
 
     if (error || !data) {
-      return successResponse(res, {
+      return response.successResponse(res, {
         code: 200,
         status: false,
         message: 'Token tidak tersedia atau kadaluarsa',
@@ -28,7 +28,7 @@ async function validateTokenCtrl(req, res) {
     const expiredAt = new Date(data.token_expired_at)
 
     if (isNaN(expiredAt) || Date.now() > expiredAt.getTime()) {
-      return successResponse(res, {
+      return response.successResponse(res, {
         code: 200,
         status: false,
         message: 'Token kadaluarsa',
@@ -41,7 +41,7 @@ async function validateTokenCtrl(req, res) {
     )
 
 
-    return successResponse(res, {
+    return response.successResponse(res, {
       code: 200,
       status: true,
       message: remainingDays <= 3
@@ -56,7 +56,7 @@ async function validateTokenCtrl(req, res) {
     });
   } catch (err) {
     console.error('❌ validateToken error:', err)
-    return errorResponse(res, 500, err?.message)
+    return response.errorResponse(res, 500, err?.message)
   }
 }
 
@@ -64,7 +64,7 @@ async function updateTokenCtrl(req, res) {
     const token = req.body.token
   
     if (!token) {
-      return successResponse(res, {
+      return response.successResponse(res, {
         code: 200,
         status: false,
         message: 'Token tidak ada',
@@ -73,10 +73,10 @@ async function updateTokenCtrl(req, res) {
     }
   
     try {
-      const { data, error } = await validateTokenModel(token)
+      const { data, error } = await tokenModel.validateTokenModel(token)
   
       if (error || !data) {
-        return successResponse(res, {
+        return response.successResponse(res, {
           code: 200,
           status: false,
           message: 'Token tidak tersedia atau kadaluarsa',
@@ -87,7 +87,7 @@ async function updateTokenCtrl(req, res) {
       const expiredAt = new Date(data.token_expired_at)
   
       if (isNaN(expiredAt.getTime()) || Date.now() > expiredAt.getTime()) {
-        return successResponse(res, {
+        return response.successResponse(res, {
           code: 200,
           status: false,
           message: 'Token akan kadaluarsa',
@@ -104,7 +104,7 @@ async function updateTokenCtrl(req, res) {
       
       if (remainingDays > 3) {
         // Jika token masih berlaku lebih dari 3 hari, tidak perlu diperpanjang
-        return successResponse(res, {
+        return response.successResponse(res, {
           code: 200,
           status: false,
           message: message,
@@ -113,10 +113,10 @@ async function updateTokenCtrl(req, res) {
       }
       
       // Jika sisa hari 3 atau kurang, perpanjang token
-      updated = await updateToken(token)
+      updated = await tokenModel.updateToken(token)
       
       if (!updated) {
-        return successResponse(res, {
+        return response.successResponse(res, {
           code: 200,
           status: false,
           message: "Gagal perbarui token kadaluarsa",
@@ -124,7 +124,7 @@ async function updateTokenCtrl(req, res) {
         });
       }
       
-      return successResponse(res, {
+      return response.successResponse(res, {
         code: 200,
         status: true,
         message: "Token berhasil di perpanjand",
@@ -138,7 +138,7 @@ async function updateTokenCtrl(req, res) {
       
     } catch (err) {
       console.error('❌ updateToken error:', err)
-      return errorResponse(res, 500, err?.message)
+      return response.errorResponse(res, 500, err?.message)
     }
 }
 

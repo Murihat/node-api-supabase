@@ -1,5 +1,11 @@
 const { supabase } = require('../config/supabase');
 
+
+// Get plan by ID
+async function getPlanById(id) {
+  return await supabase.from('tb_company_plan').select('*').eq('company_plan_id', id).single();
+}
+
 // CEK COMPANY BERDASARKAN identity_company, name, email
 const checkCompanyExists = async ({ identity_company, name, email, identity_owner }) => {
     const { data, error } = await supabase
@@ -65,4 +71,5 @@ module.exports = {
   createCompany,
   checkCompanySubscriptionExists,
   createCompanySubscription,
+  getPlanById,
 };

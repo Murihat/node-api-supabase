@@ -1,8 +1,6 @@
-const { getEmployeeDetailByToken, getEmployeeByEmail, insertEmployee} = require('../models/employeeModel');
-const { successResponse, errorResponse } = require('../helpers/response')
 const { hashPassword } = require('../helpers/tokenHelper')
-
-
+const response = require('../helpers/response')
+const employeeModel = require('../models/employeeModel')
 
 const cekEmployeeCtrl = async (req, res) => {
     try {
@@ -10,7 +8,7 @@ const cekEmployeeCtrl = async (req, res) => {
 
     // ✅ Validasi input
     if (!email) {
-      return successResponse(res, {
+      return response.successResponse(res, {
         code: 200,
         status: false,
         message: 'Email tidak ditemukan dalam request',
@@ -25,7 +23,7 @@ const cekEmployeeCtrl = async (req, res) => {
 
 
     if (!isValidFormat || !validExtension) {
-      return successResponse(res, {
+      return response.successResponse(res, {
         code: 200,
         status: false,
         message: 'Format email tidak valid',
@@ -34,11 +32,11 @@ const cekEmployeeCtrl = async (req, res) => {
     }
 
     // ✅ Ambil data employee dari database
-    const result = await getEmployeeByEmail(email);
+    const result = await employeeModel.getEmployeeByEmail(email);
 
     // ✅ Handle error dari model
     if (result.error) {
-      return successResponse(res, {
+      return response.successResponse(res, {
         code: 200,
         status: false,
         message: result.error,
@@ -47,7 +45,7 @@ const cekEmployeeCtrl = async (req, res) => {
     }
 
     // ✅ Sukses
-    return successResponse(res, {
+    return response.successResponse(res, {
       code: 200,
       status: true,
       message: 'Data employee tersedia',
@@ -56,26 +54,26 @@ const cekEmployeeCtrl = async (req, res) => {
 
   } catch (error) {
     console.error('❌ Error cekEmployeeByEmail:', error.message);
-    return errorResponse(res, 500, 'Terjadi kesalahan server', error.message);
+    return response.errorResponse(res, 500, 'Terjadi kesalahan server', error.message);
   }
 };
 
 const getEmployeeDetailCtrl = async (req, res) => {
     try {
       const token = req.query.token;
-      if (!token) return successResponse(res, {
+      if (!token) return response.successResponse(res, {
         code: 200,
         status: false,
         message: 'Unauthorized, token tidak ditemukan',
         data: {}
       });
   
-      const result = await getEmployeeDetailByToken(token);
+      const result = await employeeModel.getEmployeeDetailByToken(token);
   
       // Error dari model
       if (result.error) {
         console.warn('⚠️', result.error);
-        return successResponse(res, {
+        return response.successResponse(res, {
             code: 200,
             status: false,
             message: result.error,
@@ -83,7 +81,7 @@ const getEmployeeDetailCtrl = async (req, res) => {
           });
       }
 
-      return successResponse(res, {
+      return response.successResponse(res, {
         code: 200,
         status: true,
         message: 'Data employee ditemukan',
@@ -92,18 +90,18 @@ const getEmployeeDetailCtrl = async (req, res) => {
     
     } catch (error) {
       console.error('❌ Error getEmployeeDetail:', error.message);
-      return errorResponse(res, 500, 'Terjadi kesalahan server', error.message);
+      return response.errorResponse(res, 500, 'Terjadi kesalahan server', error.message);
     }
   };
 
 
-  const insertSuperadminCtrl = async (req, res) => {
+const insertSuperadminCtrl = async (req, res) => {
   try {
     const { name, phone, email, password, company_id } = req.body;
 
     // ✅ Validasi input sederhana
     if (!name || !phone || !email || !password || !company_id) {
-      return successResponse(res, {
+      return response.successResponse(res, {
         code: 200,
         status: false,
         message: 'Semua field wajib diisi',
@@ -129,11 +127,11 @@ const getEmployeeDetailCtrl = async (req, res) => {
     };
 
     // ✅ Insert ke database
-    const { data, error } = await insertEmployee(payload);
+    const { data, error } = await employeeModel.insertEmployee(payload);
 
     if (error) {
       console.error('❌ Error insert employee:', error.message);
-      return successResponse(res, {
+      return response.successResponse(res, {
         code: 200,
         status: false,
         message: error.message,
@@ -141,7 +139,7 @@ const getEmployeeDetailCtrl = async (req, res) => {
       });
     }
 
-    return successResponse(res, {
+    return response.successResponse(res, {
       code: 200,
       status: true,
       message: '✅ Employee berhasil ditambahkan',
@@ -150,7 +148,7 @@ const getEmployeeDetailCtrl = async (req, res) => {
 
   } catch (error) {
     console.error('❌ Error insertEmployee:', error.message);
-    return errorResponse(res, 500, 'Terjadi kesalahan server', error.message);
+    return response.errorResponse(res, 500, 'Terjadi kesalahan server', error.message);
   }
 };
 

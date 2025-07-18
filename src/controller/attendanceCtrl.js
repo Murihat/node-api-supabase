@@ -1,22 +1,14 @@
-const {
-  getValidLocations,
-  clockInUpdateAttendance,
-  clockOutUpdateAttendance,
-  checkClockInToday,
-  checkClockOutToday,
-  insertClockIn,
-  insertClockOut,
-  getAttendanceHistory, 
-} = require('../models/attendanceModel');
-const { successResponse, errorResponse } = require('../helpers/response');
+const attendanceModel = require('../models/attendanceModel');
 const haversine = require('../helpers/haversine');
 const { getEmployeeDetailByToken } = require('../models/employeeModel');
+const response = require('../helpers/response');
 
-async function attendanceCtrl(req, res) {
+
+async function attendanceSave(req, res) {
   const { token, latitude, longitude, picture, note, type } = req.body;
 
   // Validasi token
-  if (!token) return successResponse(res, {
+  if (!token) return response.successResponse(res, {
     code: 200,
     status: false,
     message: 'Unauthorized, token tidak ditemukan',
@@ -25,7 +17,7 @@ async function attendanceCtrl(req, res) {
 
   // Validasi input wajib
   if (!latitude || !longitude || !type) {
-    return successResponse(res, {
+    return response.successResponse(res, {
       code: 200,
       status: false,
       message: 'Data tidak lengkap',
@@ -34,7 +26,7 @@ async function attendanceCtrl(req, res) {
   }
 
   if (!picture) {
-    return successResponse(res, {
+    return response.successResponse(res, {
       code: 200,
       status: false,
       message: 'Wajib mengirimkan foto absensi',
@@ -43,7 +35,7 @@ async function attendanceCtrl(req, res) {
   }
 
   if (type !== 'clock_in' && type !== 'clock_out') {
-    return successResponse(res, {
+    return response.successResponse(res, {
       code: 200,
       status: false,
       message: "Tipe absensi tidak valid (clock_in / clock_out)",
@@ -54,9 +46,9 @@ async function attendanceCtrl(req, res) {
   try {
 
     // Ambil employee detail dari token
-    const { data: employeeData, error } = await getEmployeeDetailByToken(token);
+    const { data: employeeData, error } = await attendanceModel.getEmployeeDetailByToken(token);
 
-    if (error) return successResponse(res, {
+    if (error) return response.successResponse(res, {
       code: 200,
       status: false,
       message: error,
@@ -66,8 +58,9 @@ async function attendanceCtrl(req, res) {
     const { employee_id, company_id } = employeeData;
 
     // Ambil lokasi aktif dan validasi radius
-    const locations = await getValidLocations(employee_id, company_id);
-    if (!locations.length) return successResponse(res, {
+    const locations = await attendanceModel.getValidLocations(employee_id, company_id);
+
+    if (!locations.length) return response.successResponse(res, {
       code: 200,
       status: false,
       message: 'Tidak ada lokasi aktif ditemukan',
@@ -82,7 +75,7 @@ async function attendanceCtrl(req, res) {
       .filter(loc => loc.distance <= (loc.radius_in_meter || 100))
       .sort((a, b) => a.distance - b.distance)[0];
 
-    if (!validLocation) return successResponse(res, {
+    if (!validLocation) return response.successResponse(res, {
       code: 200,
       status: false,
       message: 'Diluar radius lokasi absensi',
@@ -91,9 +84,9 @@ async function attendanceCtrl(req, res) {
     
     if (type === 'clock_in') {
       // Cek sudah clock-in hari ini
-      const existingClockIn = await checkClockInToday(employee_id);
+      const existingClockIn = await attendanceModel.checkClockInToday(employee_id);
 
-      if (existingClockIn) return successResponse(res, {
+      if (existingClockIn) return response.successResponse(res, {
         code: 200,
         status: false,
         message: 'Clock-in sudah dilakukan hari ini',
@@ -101,15 +94,16 @@ async function attendanceCtrl(req, res) {
       });
 
 
-      const clockoutInRow = await checkClockOutToday(employee_id);
-      if (clockoutInRow)  return successResponse(res, {
+      const clockoutInRow = await attendanceModel.checkClockOutToday(employee_id);
+
+      if (clockoutInRow)  return response.successResponse(res, {
         code: 200,
         status: false,
         message: 'Clock-out sudah dilakukan hari ini',
         data: {}
       });
      
-      await insertClockIn({
+      await attendanceModel.insertClockIn({
         employee_id,
         company_id,
         attendance_location_id: validLocation.attendance_location_id,
@@ -120,7 +114,7 @@ async function attendanceCtrl(req, res) {
       });
       
 
-      return successResponse(res, {
+      return response.successResponse(res, {
         code: 200,
         status: true,
         message: 'Clock-in berhasil',
@@ -136,19 +130,19 @@ async function attendanceCtrl(req, res) {
     
     if (type === 'clock_out') {
       // Cek clock-in hari ini
-      const clockInRow = await checkClockInToday(employee_id);
+      const clockInRow = await attendanceModel.checkClockInToday(employee_id);
 
       if (clockInRow) {
         // Cek sudah clock-out
-        const clockoutInRow = await checkClockOutToday(employee_id);
-        if (clockoutInRow)  return successResponse(res, {
+        const clockoutInRow = await attendanceModel.checkClockOutToday(employee_id);
+        if (clockoutInRow)  return response.successResponse(res, {
           code: 200,
           status: false,
           message: 'Clock-out sudah dilakukan hari ini',
           data: {}
         });
         
-        await clockOutUpdateAttendance({
+        await attendanceModel.clockOutUpdateAttendance({
           attendance_id: clockInRow.attendance_id,
           attendance_location_id_clockout: validLocation.attendance_location_id,
           latitude,
@@ -157,7 +151,7 @@ async function attendanceCtrl(req, res) {
           note
         });
 
-        return successResponse(res, {
+        return response.successResponse(res, {
           code: 200,
           status: true,
           message: 'Clock-out berhasil',
@@ -170,7 +164,7 @@ async function attendanceCtrl(req, res) {
       }
       
       // Insert clock-out tanpa clock-in
-      await insertClockOut({
+      await attendanceModel.insertClockOut({
         employee_id,
         company_id,
         attendance_location_id_clockout: validLocation.attendance_location_id,
@@ -180,7 +174,7 @@ async function attendanceCtrl(req, res) {
         note
       });
 
-      return successResponse(res, {
+      return response.successResponse(res, {
         code: 200,
         status: true,
         message: 'Clock-out berhasil tanpa clock-in',
@@ -193,7 +187,7 @@ async function attendanceCtrl(req, res) {
     }
 
 
-    return successResponse(res, {
+    return response.successResponse(res, {
       code: 200,
       status: true,
       message: 'type absensi tidak tersedia',
@@ -202,7 +196,7 @@ async function attendanceCtrl(req, res) {
 
   } catch (err) {
     console.error('Attendance error:', err);
-    return errorResponse(res, 500, err.message );
+    return response.errorResponse(res, 500, err.message );
   }
 }
 
@@ -211,7 +205,7 @@ async function attendanceHistoryCtrl(req, res) {
   const daysNumber = days ? parseInt(days) : 31;
 
   if (!token) {
-    return successResponse(res, {
+    return response.successResponse(res, {
       code: 200,
       status: false,
       message: 'Unauthorized, token tidak ditemukan',
@@ -220,9 +214,9 @@ async function attendanceHistoryCtrl(req, res) {
   }
 
   try {
-    const { data: employeeData, error } = await getEmployeeDetailByToken(token);
+    const { data: employeeData, error } = await attendanceModel.getEmployeeDetailByToken(token);
 
-    if (error) return successResponse(res, {
+    if (error) return response.successResponse(res, {
       code: 200,
       status: false,
       message: error,
@@ -231,10 +225,10 @@ async function attendanceHistoryCtrl(req, res) {
 
     const { employee_id } = employeeData;
 
-    const history = await getAttendanceHistory(employee_id, daysNumber);
+    const history = await attendanceModel.getAttendanceHistory(employee_id, daysNumber);
 
     if (!history || history.length === 0) {
-      return successResponse(res, {
+      return response.successResponse(res, {
         code: 200,
         status: false,
         message: 'Tidak ada riwayat absensi ditemukan',
@@ -242,7 +236,7 @@ async function attendanceHistoryCtrl(req, res) {
       });
     }
 
-    return successResponse(res, {
+    return response.successResponse(res, {
       code: 200,
       status: true,
       message: 'Riwayat absensi berhasil diambil',
@@ -251,12 +245,9 @@ async function attendanceHistoryCtrl(req, res) {
     
   } catch (err) {
     console.error('❌ Error ambil riwayat absensi:', err.message);
-    return errorResponse(res, 500, err.message);
+    return response.errorResponse(res, 500, err.message);
   }
 }
 
 
-
-
-
-module.exports = { attendanceCtrl, attendanceHistoryCtrl };
+module.exports = { attendanceSave, attendanceHistoryCtrl };
