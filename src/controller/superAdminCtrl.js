@@ -2,6 +2,156 @@ const { hashPassword } = require('../helpers/tokenHelper')
 const superAdminModel = require('../models/superAdminModel')
 const response = require('../helpers/response')
 
+
+const getEmployeeLevelsCtrl = async (req, res) => {
+  const { token } = req.query;
+
+  if (!token) {
+    return response.successResponse(res, {
+      code: 200,
+      status: false,
+      message: 'token tidak ditemukan',
+      data: {}
+    });
+  }
+
+    const { data: employeeData, error: employeeError } = await superAdminModel.getEmployeeDetailByToken(token);
+
+    if (employeeError) {
+        return response.successResponse(res, {
+            code: 200,
+            status: false,
+            message: employeeError,
+            data: {}
+        });
+    }
+
+    const { company_id, user_status_code } = employeeData;
+
+        if (user_status_code !== "super_admin") {
+            return response.successResponse(res, {
+            code: 200,
+            status: false,
+            message: "Hanya superadmin yang boleh lihat employee level",
+            data: {}
+        });
+    }
+
+  const { data, error } = await superAdminModel.getEmployeeLevelsByCompany(company_id);
+
+  if (error) {
+    return response.successResponse(res, {
+      code: 200,
+      status: false,
+      message: error.message,
+      data: {}
+    });
+  }
+
+  return response.successResponse(res, {
+    code: 200,
+    status: true,
+    message: '✅ List employee level berhasil diambil',
+    data
+  });
+};
+
+const insertEmployeeLevelCtrl = async (req, res) => {
+  try {
+    const { token, level_name, level_code, level_order } = req.body;
+
+    if (!token || !level_name || !level_code || level_order === undefined) {
+      return successResponse(res, {
+        code: 200,
+        status: false,
+        message: 'Semua data wajib diisi',
+        data: {}
+      });
+    }
+
+    const { data: employeeData, error: employeeError } = await superAdminModel.getEmployeeDetailByToken(token);
+
+    if (employeeError) {
+      return response.successResponse(res, {
+        code: 200,
+        status: false,
+        message: employeeError,
+        data: {}
+      });
+    }
+
+    const { company_id, user_status_code } = employeeData;
+
+     if (user_status_code !== "super_admin") {
+      return response.successResponse(res, {
+        code: 200,
+        status: false,
+        message: "Hanya superadmin yang boleh insert employee level",
+        data: {}
+      });
+    }
+
+     // ✅ Step cek level sudah ada
+    const { data: existsLevel, error: existsError } = await superAdminModel.checkEmployeeLevelExists({
+      company_id,
+      level_code,
+      level_order
+    });
+
+    if (existsError) {
+      return response.successResponse(res, {
+        code: 200,
+        status: false,
+        message: existsError.message,
+        data: {}
+      });
+    }
+
+    if (existsLevel) {
+        const levelMessage = 
+    existsLevel.level_code === level_code
+      ? `Level code '${level_code}' sudah dipakai di company ini`
+      : `Level order '${level_order}' sudah dipakai di company ini`;
+
+      return response.successResponse(res, {
+        code: 200,
+        status: false,
+        message: levelMessage,
+        data: {}
+      });
+    }
+
+    const { data, error } = await superAdminModel.insertEmployeeLevel({
+      company_id,
+      level_name,
+      level_code,
+      level_order
+    });
+
+    if (error) {
+      console.error('❌ Error insertEmployeeLevel:', error.message);
+      return response.successResponse(res, {
+        code: 200,
+        status: false,
+        message: error.message,
+        data: {}
+      });
+    }
+
+    return response.successResponse(res, {
+      code: 200,
+      status: true,
+      message: '✅ Employee level berhasil ditambahkan',
+      data
+    });
+
+  } catch (err) {
+    console.error('❌ Server Error:', err.message);
+    return response.errorResponse(res, 500, 'Internal server error', err.message);
+  }
+};
+
+
 const saveSuperadminCtrl = async (req, res) => {
     try {
         const { company, employee, plan_id } = req.body;
@@ -164,4 +314,8 @@ const deleteCompanySubscription = async (company_id) => {
 };
 
 
-module.exports = { saveSuperadminCtrl }
+module.exports = {
+    saveSuperadminCtrl,
+    insertEmployeeLevelCtrl, 
+    getEmployeeLevelsCtrl,
+}

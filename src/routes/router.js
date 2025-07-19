@@ -18,6 +18,9 @@ router.post('/login', loginCtrl.loginAction)
 
 // superadmin
 router.post('/saveSuperadmin', superAdminCtrl.saveSuperadminCtrl)
+router.post('/saveEmployeeLevel', superAdminCtrl.insertEmployeeLevelCtrl)
+router.get('/getEmployeeLevel', superAdminCtrl.getEmployeeLevelsCtrl)
+
 
 // employee
 router.get('/employeeDetail', employeeCtrl.getEmployeeDetailCtrl);
