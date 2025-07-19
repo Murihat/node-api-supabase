@@ -20,6 +20,8 @@ router.post('/login', loginCtrl.loginAction)
 router.post('/saveSuperadmin', superAdminCtrl.saveSuperadminCtrl)
 router.post('/saveEmployeeLevel', superAdminCtrl.insertEmployeeLevelCtrl)
 router.get('/getEmployeeLevel', superAdminCtrl.getEmployeeLevelsCtrl)
+router.post('/saveDepartment', superAdminCtrl.insertDepartmentCtrl)
+router.get('/getDepartment', superAdminCtrl.getDepartmentsCtrl)
 
 
 // employee

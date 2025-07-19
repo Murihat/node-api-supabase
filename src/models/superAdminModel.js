@@ -180,6 +180,45 @@ const getEmployeeLevelsByCompany = async (company_id) => {
 };
 
 
+const checkDepartmentExists = async (company_id, department_code) => {
+  const { data, error } = await supabase
+      .from('m_department')
+      .select('department_id')
+      .eq('company_id', company_id)
+      .eq('department_code', department_code)
+      .maybeSingle();
+
+    return { data, error };
+};
+
+
+const getDepartmentByCompany = async (company_id) => {
+  const { data, error } = await supabase
+    .from('m_department')
+    .select('*')
+    .eq('company_id', company_id)
+    // .eq('is_active', true)
+    .order('department_id', { ascending: true });
+
+  return { data, error };
+};
+
+const insertDepartment = async ({ company_id, department_name, department_code }) => {
+   const { data, error } = await supabase
+    .from('m_department')
+    .insert([
+      {
+        company_id,
+        department_name,
+        department_code,
+      }
+    ])
+    .select('*') // Supabase .select('*') mengembalikan data setelah insert
+    .single();   // ambil hanya 1 record, karena insert 1 row
+
+  return { data, error };
+};
+
 module.exports = { 
     checkCompanyExists,
     createCompany,
@@ -193,4 +232,7 @@ module.exports = {
     getEmployeeDetailByToken,
     checkEmployeeLevelExists,
     getEmployeeLevelsByCompany,
+    checkDepartmentExists,
+    insertDepartment,
+    getDepartmentByCompany,
 }

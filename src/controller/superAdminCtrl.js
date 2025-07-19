@@ -151,6 +151,161 @@ const insertEmployeeLevelCtrl = async (req, res) => {
   }
 };
 
+const getDepartmentsCtrl = async (req, res) => {
+  const { token } = req.query;
+
+  if (!token) {
+    return response.successResponse(res, {
+      code: 200,
+      status: false,
+      message: 'Token tidak ditemukan',
+      data: {}
+    });
+  }
+
+  // ✅ Cek employee dari token
+  const { data: employeeData, error: employeeError } = await superAdminModel.getEmployeeDetailByToken(token);
+
+  if (employeeError) {
+    return response.successResponse(res, {
+      code: 200,
+      status: false,
+      message: employeeError,
+      data: {}
+    });
+  }
+
+  const { company_id, user_status_code } = employeeData;
+
+  if (user_status_code !== "super_admin") {
+    return response.successResponse(res, {
+      code: 200,
+      status: false,
+      message: "Hanya superadmin yang boleh lihat daftar department",
+      data: {}
+    });
+  }
+
+  // ✅ Ambil data department
+  const { data, error } = await superAdminModel.getDepartmentByCompany(company_id);
+
+  if (error) {
+    return response.successResponse(res, {
+      code: 200,
+      status: false,
+      message: error.message,
+      data: {}
+    });
+  }
+
+  if (!data || data.length === 0) {
+    return response.successResponse(res, {
+        code: 200,
+        status: false,
+        message: 'List department tidak tersedia',
+        data: []
+    });
+    }
+
+  return response.successResponse(res, {
+    code: 200,
+    status: true,
+    message: '✅ List department berhasil diambil',
+    data
+  });
+};
+
+
+const insertDepartmentCtrl = async (req, res) => {
+  try {
+    const { token, department_name, department_code } = req.body;
+
+    if (!token || !department_name || !department_code) {
+      return response.successResponse(res, {
+        code: 200,
+        status: false,
+        message: 'Semua data wajib diisi',
+        data: {}
+      });
+    }
+
+    // ✅ Step 1: Get Employee Data dari token
+    const { data: employeeData, error: employeeError } = await superAdminModel.getEmployeeDetailByToken(token);
+
+    if (employeeError) {
+      return response.successResponse(res, {
+        code: 200,
+        status: false,
+        message: employeeError,
+        data: {}
+      });
+    }
+
+    const { company_id, user_status_code } = employeeData;
+
+    if (user_status_code !== "super_admin") {
+      return response.successResponse(res, {
+        code: 200,
+        status: false,
+        message: "Hanya superadmin yang boleh insert department",
+        data: {}
+      });
+    }
+
+    // ✅ Step 2: Cek Department sudah ada
+    const { data: existsDepartment, error: existsError } = await superAdminModel.checkDepartmentExists(
+      company_id,
+      department_code
+    );
+
+    if (existsError) {
+      return response.successResponse(res, {
+        code: 200,
+        status: false,
+        message: existsError.message,
+        data: {}
+      });
+    }
+
+    if (existsDepartment) {
+      return response.successResponse(res, {
+        code: 200,
+        status: false,
+        message: `Department code '${department_code}' sudah terdaftar di company ini`,
+        data: {}
+      });
+    }
+
+    // ✅ Step 3: Insert ke m_department
+    const { data, error } = await superAdminModel.insertDepartment({
+      company_id,
+      department_name,
+      department_code
+    });
+
+    if (error) {
+      console.error('❌ Error insertDepartment:', error.message);
+      return response.successResponse(res, {
+        code: 200,
+        status: false,
+        message: error.message,
+        data: {}
+      });
+    }
+
+    return response.successResponse(res, {
+      code: 200,
+      status: true,
+      message: '✅ Department berhasil ditambahkan',
+      data
+    });
+
+  } catch (err) {
+    console.error('❌ Server Error:', err.message);
+    return response.errorResponse(res, 500, 'Internal server error', err.message);
+  }
+};
+
 
 const saveSuperadminCtrl = async (req, res) => {
     try {
@@ -318,4 +473,6 @@ module.exports = {
     saveSuperadminCtrl,
     insertEmployeeLevelCtrl, 
     getEmployeeLevelsCtrl,
+    insertDepartmentCtrl,
+    getDepartmentsCtrl,
 }
