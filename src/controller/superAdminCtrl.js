@@ -556,7 +556,7 @@ const insertEmployeeCtrl = async (req, res) => {
       department_id: employee.department_id,
       job_title: employee.job_title,
       user_status_id: 2, //2 for employee
-      image_base64: employee.picture || null,
+      picture: employee.picture || null,
       is_active: true,
     });
 
