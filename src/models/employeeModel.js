@@ -130,12 +130,70 @@ const getEmployeeDetailByToken = async (token) => {
   };
   
 
-  const insertEmployee = async (payload) => {
+const insertEmployee = async (payload) => {
   return await supabase
     .from('tb_employee')
     .insert(payload)
     .select()
     .single();
+};
+
+
+
+const getEmployeeListByCompany = async (company_id) => {
+  try {
+    const { data, error } = await supabase
+      .from('tb_employee')
+      .select(`
+        *,
+        tb_company:company_id (
+          company_id,
+          name,
+          address
+        ),
+        m_employee_level:employee_level_id!left (
+          employee_level_id,
+          level_name,
+          level_code
+        ),
+        m_department:department_id!left (
+          department_id,
+          department_name,
+          department_code
+        )
+      `)
+      .eq('company_id', company_id)
+      .eq('is_active', true)
+      .neq('user_status_id', 1) // ✅ Exclude super_admin
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    const employeeList = data.map(item => {
+      const {
+        tb_company,
+        m_employee_level,
+        m_department,
+        ...flatEmployee
+      } = item;
+
+      return {
+        ...flatEmployee,
+        company_name: tb_company?.name ?? null,
+        company_address: tb_company?.address ?? null,
+        employee_level_name: m_employee_level?.level_name ?? null,
+        employee_level_code: m_employee_level?.level_code ?? null,
+        department_name: m_department?.department_name ?? null,
+        department_code: m_department?.department_code ?? null,
+      };
+    });
+
+    return { data: employeeList, error: null };
+
+  } catch (error) {
+    console.error('❌ Error getEmployeeListByCompany:', error.message);
+    return { data: null, error };
+  }
 };
   
 module.exports = {
@@ -143,4 +201,5 @@ module.exports = {
     getEmployeeByEmail,
     getEmployeeRoleByEmail,
     insertEmployee,
+    getEmployeeListByCompany,
 };

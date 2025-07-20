@@ -94,68 +94,62 @@ const getEmployeeDetailCtrl = async (req, res) => {
     }
   };
 
-
-const insertSuperadminCtrl = async (req, res) => {
+const getEmployeeListCtrl = async (req, res) => {
   try {
-    const { name, phone, email, password, company_id } = req.body;
+    const { token } = req.query;
 
-    // ✅ Validasi input sederhana
-    if (!name || !phone || !email || !password || !company_id) {
+    if (!token) {
       return response.successResponse(res, {
         code: 200,
         status: false,
-        message: 'Semua field wajib diisi',
-        data: {}
+        message: 'Token wajib diisi',
+        data: []
       });
     }
 
-    // ✅ Format join_date
-    const join_date = new Date().toISOString().split('T')[0]; // format YYYY-MM-DD
+    // ✅ Ambil data superadmin dari token
+    const { data: employeeData, error: employeeError } = await employeeModel.getEmployeeDetailByToken(token);
 
-    const hashed = hashPassword(password)
+    if (employeeError) {
+      return response.successResponse(res, {
+        code: 200,
+        status: false,
+        message: employeeError,
+        data: []
+      });
+    }
 
+    const { company_id } = employeeData;
 
-    // ✅ Payload insert
-    const payload = {
-      name,
-      phone,
-      email,
-      password: hashed,
-      company_id,
-      employee_level_id: 7, //superadmin
-      join_date
-    };
-
-    // ✅ Insert ke database
-    const { data, error } = await employeeModel.insertEmployee(payload);
+    // ✅ Ambil list employee berdasarkan company_id
+    const { data: employeeList, error } = await employeeModel.getEmployeeListByCompany(company_id);
 
     if (error) {
-      console.error('❌ Error insert employee:', error.message);
+      console.error('❌ Error getEmployeeList:', error.message);
       return response.successResponse(res, {
         code: 200,
         status: false,
         message: error.message,
-        data: {}
+        data: []
       });
     }
 
     return response.successResponse(res, {
       code: 200,
       status: true,
-      message: '✅ Employee berhasil ditambahkan',
-      data
+      message: '✅ List employee berhasil diambil',
+      data: employeeList
     });
 
-  } catch (error) {
-    console.error('❌ Error insertEmployee:', error.message);
-    return response.errorResponse(res, 500, 'Terjadi kesalahan server', error.message);
+  } catch (err) {
+    console.error('❌ Server Error:', err.message);
+    return response.errorResponse(res, 500, 'Internal server error', err.message);
   }
 };
-
 
 
 module.exports = {
     cekEmployeeCtrl,
     getEmployeeDetailCtrl,
-    insertSuperadminCtrl,
+    getEmployeeListCtrl,
 };

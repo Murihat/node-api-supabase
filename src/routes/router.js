@@ -29,7 +29,8 @@ router.get('/getEmployee', superAdminCtrl.getEmployeeListCtrl)
 // employee
 router.get('/employeeDetail', employeeCtrl.getEmployeeDetailCtrl);
 router.post('/cekemployee', employeeCtrl.cekEmployeeCtrl);
-router.post('/insertsuperadmin', employeeCtrl.insertSuperadminCtrl);
+router.get('/getAllEmployee', employeeCtrl.getEmployeeListCtrl);
+
 
 // plan
 router.get('/plan', planCtrl.getAllCompanyPlans);
