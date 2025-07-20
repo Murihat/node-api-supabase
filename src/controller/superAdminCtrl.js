@@ -557,6 +557,7 @@ const insertEmployeeCtrl = async (req, res) => {
       job_title: employee.job_title,
       user_status_id: 2, //2 for employee
       picture: employee.picture || null,
+      join_date: new Date().toISOString().slice(0, 10), // ✅ hasil: 2025-07-20
       is_active: true,
     });
 
