@@ -472,13 +472,25 @@ const deleteCompanySubscription = async (company_id) => {
 
 const insertEmployeeCtrl = async (req, res) => {
   try {
-    const { token, name, email, password, employee_level_id, job_title, image_base64 } = req.body;
 
-    if (!token || !name || !email || !password || !employee_level_id || !job_title) {
+    const { token, employee } = req.body;
+    console.log(req.body);
+
+    if (!token || !employee) {
+        return response.successResponse(res, {
+            code: 200,
+            status: false,
+            message: 'Data harap dilengkapi!',
+            data: {}
+        });
+    }
+
+
+    if (!employee.name || !employee.email || !employee.password || !employee.employee_level_id || !employee.department_id || !employee.job_title) {
       return response.successResponse(res, {
         code: 200,
         status: false,
-        message: 'Semua data wajib diisi',
+        message: 'Semua data wajib diisi kecuali image',
         data: {}
       });
     }
@@ -506,39 +518,46 @@ const insertEmployeeCtrl = async (req, res) => {
       });
     }
 
+   const email = employee.email;
+
     // ✅ Cek email sudah digunakan
     const { data: existsEmployee, error: existsError } = await superAdminModel.checkEmployeeExistsByEmail({
-      company_id,
-      email
+        company_id,
+        email
     });
 
     if (existsError) {
-      return response.successResponse(res, {
-        code: 200,
-        status: false,
-        message: existsError.message,
-        data: {}
-      });
+        return response.successResponse(res, {
+            code: 200,
+            status: false,
+            message: existsError.message,
+            data: {}
+        });
     }
 
     if (existsEmployee) {
-      return response.successResponse(res, {
-        code: 200,
-        status: false,
-        message: `Email '${email}' sudah digunakan di company ini`,
-        data: {}
-      });
+        return response.successResponse(res, {
+            code: 200,
+            status: false,
+            message: `Email '${email}' sudah digunakan di company ini`,
+            data: {}
+        });
     }
+
+    const hashed = hashPassword(employee.password)
 
     // ✅ Insert employee
     const { data, error } = await superAdminModel.insertEmployee({
       company_id,
-      name,
-      email,
-      password,
-      employee_level_id,
-      job_title,
-      image_base64: image_base64 || null
+      name: employee.name,
+      email: employee.email,
+      password: hashed,
+      employee_level_id: employee.employee_level_id,
+      department_id: employee.department_id,
+      job_title: employee.job_title,
+      user_status_id: 2, //2 for employee
+      image_base64: employee.picture || null,
+      is_active: true,
     });
 
     if (error) {

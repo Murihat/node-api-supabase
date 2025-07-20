@@ -275,6 +275,28 @@ const getEmployeeListByCompany = async (company_id) => {
 };
 
 
+const checkEmployeeExistsByEmail = async ({ company_id, email }) => {
+  try {
+    const { data, error } = await supabase
+      .from('tb_employee')
+      .select('employee_id')
+      .eq('company_id', company_id)
+      .eq('email', email)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    return {
+      data: data || null,
+      error: null
+    };
+
+  } catch (error) {
+    console.error('❌ Error checkEmployeeExistsByEmail:', error.message);
+    return { data: null, error };
+  }
+};
+
 
 module.exports = { 
     checkCompanyExists,
@@ -293,4 +315,5 @@ module.exports = {
     insertDepartment,
     getDepartmentByCompany,
     getEmployeeListByCompany,
+    checkEmployeeExistsByEmail,
 }
