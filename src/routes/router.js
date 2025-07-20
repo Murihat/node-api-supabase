@@ -22,6 +22,8 @@ router.post('/saveEmployeeLevel', superAdminCtrl.insertEmployeeLevelCtrl)
 router.get('/getEmployeeLevel', superAdminCtrl.getEmployeeLevelsCtrl)
 router.post('/saveDepartment', superAdminCtrl.insertDepartmentCtrl)
 router.get('/getDepartment', superAdminCtrl.getDepartmentsCtrl)
+router.get('saveEmployee', superAdminCtrl.insertEmployeeCtrl)
+router.get('/getEmployee', superAdminCtrl.getEmployeeListCtrl)
 
 
 // employee

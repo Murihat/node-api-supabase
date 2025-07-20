@@ -469,10 +469,171 @@ const deleteCompanySubscription = async (company_id) => {
 };
 
 
+
+const insertEmployeeCtrl = async (req, res) => {
+  try {
+    const { token, name, email, password, employee_level_id, job_title, image_base64 } = req.body;
+
+    if (!token || !name || !email || !password || !employee_level_id || !job_title) {
+      return response.successResponse(res, {
+        code: 200,
+        status: false,
+        message: 'Semua data wajib diisi',
+        data: {}
+      });
+    }
+
+    // ✅ Get superadmin detail
+    const { data: employeeData, error: employeeError } = await superAdminModel.getEmployeeDetailByToken(token);
+
+    if (employeeError) {
+      return response.successResponse(res, {
+        code: 200,
+        status: false,
+        message: employeeError,
+        data: {}
+      });
+    }
+
+    const { company_id, user_status_code } = employeeData;
+
+    if (user_status_code !== "super_admin") {
+      return response.successResponse(res, {
+        code: 200,
+        status: false,
+        message: "Hanya superadmin yang boleh insert employee",
+        data: {}
+      });
+    }
+
+    // ✅ Cek email sudah digunakan
+    const { data: existsEmployee, error: existsError } = await superAdminModel.checkEmployeeExistsByEmail({
+      company_id,
+      email
+    });
+
+    if (existsError) {
+      return response.successResponse(res, {
+        code: 200,
+        status: false,
+        message: existsError.message,
+        data: {}
+      });
+    }
+
+    if (existsEmployee) {
+      return response.successResponse(res, {
+        code: 200,
+        status: false,
+        message: `Email '${email}' sudah digunakan di company ini`,
+        data: {}
+      });
+    }
+
+    // ✅ Insert employee
+    const { data, error } = await superAdminModel.insertEmployee({
+      company_id,
+      name,
+      email,
+      password,
+      employee_level_id,
+      job_title,
+      image_base64: image_base64 || null
+    });
+
+    if (error) {
+      console.error('❌ Error insertEmployee:', error.message);
+      return response.successResponse(res, {
+        code: 200,
+        status: false,
+        message: error.message,
+        data: {}
+      });
+    }
+
+    return response.successResponse(res, {
+      code: 200,
+      status: true,
+      message: '✅ Employee berhasil ditambahkan',
+      data
+    });
+
+  } catch (err) {
+    console.error('❌ Server Error:', err.message);
+    return response.errorResponse(res, 500, 'Internal server error', err.message);
+  }
+};
+
+
+const getEmployeeListCtrl = async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return response.successResponse(res, {
+        code: 200,
+        status: false,
+        message: 'Token wajib diisi',
+        data: []
+      });
+    }
+
+    // ✅ Ambil data superadmin dari token
+    const { data: employeeData, error: employeeError } = await superAdminModel.getEmployeeDetailByToken(token);
+
+    if (employeeError) {
+      return response.successResponse(res, {
+        code: 200,
+        status: false,
+        message: employeeError,
+        data: []
+      });
+    }
+
+    const { company_id, user_status_code } = employeeData;
+
+    if (user_status_code !== "super_admin") {
+      return response.successResponse(res, {
+        code: 200,
+        status: false,
+        message: "Hanya superadmin yang boleh melihat data employee",
+        data: []
+      });
+    }
+
+    // ✅ Ambil list employee berdasarkan company_id
+    const { data: employeeList, error } = await superAdminModel.getEmployeeListByCompany(company_id);
+
+    if (error) {
+      console.error('❌ Error getEmployeeList:', error.message);
+      return response.successResponse(res, {
+        code: 200,
+        status: false,
+        message: error.message,
+        data: []
+      });
+    }
+
+    return response.successResponse(res, {
+      code: 200,
+      status: true,
+      message: '✅ List employee berhasil diambil',
+      data: employeeList
+    });
+
+  } catch (err) {
+    console.error('❌ Server Error:', err.message);
+    return response.errorResponse(res, 500, 'Internal server error', err.message);
+  }
+};
+
+
 module.exports = {
     saveSuperadminCtrl,
     insertEmployeeLevelCtrl, 
     getEmployeeLevelsCtrl,
     insertDepartmentCtrl,
     getDepartmentsCtrl,
+    insertEmployeeCtrl,
+    getEmployeeListCtrl,
 }
