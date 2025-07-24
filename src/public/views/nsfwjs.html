@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>NSFW Image Checker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      background-color: #f9f9f9;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 0;
+    }
+
+    p {
+      text-align: center;
+      color: #555;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    input[type="file"] {
+      padding: 10px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 10px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .result {
+      margin-top: 30px;
+      padding: 20px;
+      background-color: #e9ffe9;
+      border: 1px solid #28a745;
+      border-radius: 5px;
+      color: #155724;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>Murihat - NSFWJS</h1>
+  <p>Upload an image to check if it's NSFW</p>
+
+  <form action="/upload" method="POST" enctype="multipart/form-data">
+    <input type="file" name="image" accept=".png,.jpg,.jpeg,.bmp,.gif" required />
+    <button type="submit">Upload & Check</button>
+  </form>
+
+  <div id="prediction" class="result" style="display: none;"></div>
+
+ <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const result = urlParams.get('result');
+    if (result) {
+        const resultDiv = document.getElementById('prediction');
+        resultDiv.style.display = 'block';
+        resultDiv.textContent = '🧠 Prediction Result: ' + result;
+    }
+    </script>
+</body>
+</html>

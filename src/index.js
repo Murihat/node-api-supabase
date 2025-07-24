@@ -41,11 +41,6 @@ app.use(basicAuth({
 const router = require('./routes/router')
 app.use('/', router)
 
-// Default route
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/public/views/index.html')
-})
-
 app.listen(port, () => {
   console.log(`🚀 Server ready at http://localhost:${port}`)
 })
