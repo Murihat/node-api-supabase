@@ -1,51 +1,63 @@
-require('dotenv').config()
-const express = require('express')
-const cors = require('cors')
-// const basicAuth = require('express-basic-auth')
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const { pool } = require('./config/mysqli');
+// const basicAuth = require('express-basic-auth');
 
-const app = express()
-const port = process.env.PORT || 3000
+const app = express();
+const port = process.env.PORT || 3000;
 
-// Serve static files (CSS, images, JS)
-app.use(express.static(__dirname + '/public'))
+// Cek koneksi pool sebelum run server
+(async () => {
+  try {
+    const connection = await pool.getConnection();
+    await connection.ping();
+    console.log('✅ MySQL pool connection successful');
+    connection.release();
 
-// CORS setup
-app.use(cors({
-  origin: process.env.ALLOWED_ORIGIN || '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: false
-}))
+    // ===== Middleware & Routing =====
 
-// Timeout middleware
-app.use((req, res, next) => {
-  res.setTimeout(60000, () => {
-    return res.status(503).json({ error: 'Request timeout. Please try again.' })
-  })
-  next()
-})
+    app.use(express.static(__dirname + '/public'));
 
-// Body parser
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+    app.use(cors({
+      origin: process.env.ALLOWED_ORIGIN || '*',
+      methods: ['GET', 'POST', 'PUT', 'DELETE'],
+      credentials: false
+    }));
 
-// Basic Auth (optional)
-/*
-app.use(basicAuth({
-  users: { [process.env.API_USERNAME]: process.env.API_PASSWORD },
-  challenge: true,
-  unauthorizedResponse: () => ({ error: 'Unauthorized' })
-}))
-*/
+    app.use((req, res, next) => {
+      res.setTimeout(60000, () => {
+        return res.status(503).json({ error: 'Request timeout. Please try again.' });
+      });
+      next();
+    });
 
-// All Routes
-const router = require('./routes/router')
-app.use('/', router)
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
 
-// Default route
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/public/views/index.html')
-})
+    // Basic Auth (optional)
+    /*
+    app.use(basicAuth({
+      users: { [process.env.API_USERNAME]: process.env.API_PASSWORD },
+      challenge: true,
+      unauthorizedResponse: () => ({ error: 'Unauthorized' })
+    }));
+    */
 
-app.listen(port, () => {
-  console.log(`🚀 Server ready at http://localhost:${port}`)
-})
+    const router = require('./routes/router');
+    app.use('/', router);
+
+    app.get('/', (req, res) => {
+      res.sendFile(__dirname + '/public/views/index.html');
+    });
+
+    app.listen(port, () => {
+      console.log(`🚀 Server ready at http://localhost:${port}`);
+    });
+
+  } catch (err) {
+     console.error('❌ MySQL pool connection failed:', err.message);
+     console.error(err);
+     process.exit(1);
+  }
+})();
