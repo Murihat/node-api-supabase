@@ -13,13 +13,14 @@
   "description": "",
   "dependencies": {
     "@supabase/supabase-js": "^2.50.5",
-    "@tensorflow/tfjs-node": "^4.22.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.0",
     "express": "^5.1.0",
     "express-basic-auth": "^1.2.1",
+    "gm": "^1.25.1",
     "multer": "^2.0.2",
-    "nsfwjs": "^4.2.1"
+    "sharp": "^0.34.3",
+    "tesseract.js": "^6.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

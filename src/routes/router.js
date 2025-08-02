@@ -1,9 +1,10 @@
 const express = require('express')
 const router = express.Router()
 const path = require('path')
-const nsfwCtrl = require('../controller/nsfwCtrl')
 const multer = require('multer')                   
 const upload = multer({ storage: multer.memoryStorage() }) 
+const { ocrCtrl } = require('../controller/ocrCtrl');
+
 
 
 
@@ -12,15 +13,12 @@ router.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/views/index.html'))
 })
 
-// NSFWJS HTML Page
-router.get('/nsfw', (req, res, next) => {
-  res.set('Cache-Control', 'no-store');
-  next();
-}, (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/views/nsfwjs.html'));
+// Halaman OCR
+router.get('/ocr', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/views/ocr.html'));
 });
 
-// Upload + classify NSFW
-router.post('/upload', upload.single('image'), nsfwCtrl.checkImageNSFW)
+// Proses OCR
+router.post('/ocr', upload.single('image'), ocrCtrl);
 
 module.exports = router;

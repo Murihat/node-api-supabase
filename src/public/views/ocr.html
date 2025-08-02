@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>OCR KTP Indonesia</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 20px;
+      background-color: #f9f9f9;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 5px;
+    }
+
+    p {
+      text-align: center;
+      color: #666;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    input[type="file"] {
+      padding: 10px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 10px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: #218838;
+    }
+
+    .result {
+      margin-top: 30px;
+      padding: 20px;
+      background-color: #fff3cd;
+      border: 1px solid #ffeeba;
+      border-radius: 5px;
+      color: #856404;
+      font-size: 16px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>OCR KTP Indonesia</h1>
+  <p>Upload gambar KTP untuk melihat hasil teks</p>
+
+  <form action="/ocr" method="POST" enctype="multipart/form-data">
+    <input type="file" name="image" accept=".png,.jpg,.jpeg,.bmp,.gif" required />
+    <button type="submit">Upload & OCR</button>
+  </form>
+
+  <div id="ocr-result" class="result" style="display: none;"></div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const ocr = urlParams.get('ocr');
+    if (ocr) {
+      const decoded = decodeURIComponent(ocr);
+      const resultDiv = document.getElementById('ocr-result');
+      resultDiv.style.display = 'block';
+      resultDiv.textContent = '📄 Hasil OCR:\n\n' + decoded;
+
+      // Hapus query parameter setelah ditampilkan agar reset saat refresh
+      if (window.history.replaceState) {
+        const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+        window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+      }
+    }
+  </script>
+</body>
+</html>

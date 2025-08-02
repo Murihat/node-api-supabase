@@ -1,7 +1,1 @@
 docker run -it --rm -v D:\NodeJs\node-api-supabase:/app -w /app -p 3000:3000 node:22-alpine sh
-
-
-docker run -it --rm -v D:\NodeJs\node-api-supabase:/app -w /app -p 3000:3000 --env-file .env nsfw-checker
-
-
-docker run -it -v D:\NodeJs\node-api-supabase:/app -w /app -p 3000:3000 --env-file .env --name nsfw-container nsfw-checker
