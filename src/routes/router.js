@@ -7,6 +7,19 @@ const employeeCtrl = require('../controller/employeeCtrl')
 const companyCtrl = require('../controller/companyCtrl');
 const attendanceCtrl = require('../controller/attendanceCtrl')
 const superAdminCtrl = require('../controller/superAdminCtrl')
+const superCtrl = require('../controller/superadmin/superCtrl')
+
+
+//SUPERADMIN
+router.route('/superadmin')
+  .post(superCtrl.simpanSuperAdmin)
+  .get(superCtrl.getSuperadminList);
+
+router.route('/superadmin/:id')
+  .get(superCtrl.getSuperadminById)
+  .put(superCtrl.updateSuperadmin)
+  .delete(superCtrl.deleteSuperadmin);
+
 
 
 // token
