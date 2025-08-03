@@ -63,66 +63,6 @@ const SuperAdminModel = {
       return { error };
     }
   },
-
-  async deleteCompany(company_id, conn) {
-    try {
-      await (conn || db).query(`DELETE FROM tb_company WHERE company_id = ?`, [company_id]);
-      return {};
-    } catch (error) {
-      return { error };
-    }
-  },
-
-  async deleteCompanySubscription(company_id, conn) {
-    try {
-      await (conn || db).query(`DELETE FROM tb_company_subscription WHERE company_id = ?`, [company_id]);
-      return {};
-    } catch (error) {
-      return { error };
-    }
-  },
-
-  async getAllSuperadmins(conn) {
-    try {
-      const [rows] = await (conn || db).query(`SELECT * FROM tb_employee WHERE user_status = 1`);
-      return { data: rows };
-    } catch (error) {
-      return { error };
-    }
-  },
-
-  async getSuperadminById(id, conn) {
-    try {
-      const [rows] = await (conn || db).query(
-        `SELECT * FROM tb_employee WHERE employee_id = ? AND user_status = 1`,
-        [id]
-      );
-      return { data: rows[0] };
-    } catch (error) {
-      return { error };
-    }
-  },
-
-  async updateSuperadminById(id, data, conn) {
-    try {
-      await (conn || db).query(
-        `UPDATE tb_employee SET ? WHERE employee_id = ? AND user_status = 1`,
-        [data, id]
-      );
-      return { data: { ...data, employee_id: id } };
-    } catch (error) {
-      return { error };
-    }
-  },
-
-  async deleteSuperadminById(id, conn) {
-    try {
-      await (conn || db).query(`DELETE FROM tb_employee WHERE employee_id = ? AND user_status = 1`, [id]);
-      return {};
-    } catch (error) {
-      return { error };
-    }
-  },
 };
 
 module.exports = SuperAdminModel;

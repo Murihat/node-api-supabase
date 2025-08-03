@@ -12,12 +12,7 @@ const SuperCtrl = {
 
             if (!company || !employee || !plan_id) {
                 conn.release();
-                return response.successResponse(res, {
-                    code: 200,
-                    status: false,
-                    message: 'Data harap dilengkapi!',
-                    data: {},
-                });
+                return response.errorResponse(res, { message: 'Data harap dilengkapi!' });
             }
 
             await conn.beginTransaction();
@@ -28,13 +23,13 @@ const SuperCtrl = {
             if (checkError) {
                 await conn.rollback();
                 conn.release();
-                return response.errorResponse(res, 200, `Gagal cek company: ${checkError.message || checkError}`);
+                return response.errorResponse(res,{ message: `Gagal cek company: ${checkError.message || checkError}` });
             }
 
             if (exists) {
                 await conn.rollback();
                 conn.release();
-                return response.errorResponse(res, 200, 'Company sudah terdaftar');
+                return response.errorResponse(res,{ message: 'Company sudah terdaftar' });
             }
 
             // Insert company
@@ -42,7 +37,7 @@ const SuperCtrl = {
             if (companyError) {
                 await conn.rollback();
                 conn.release();
-                return response.errorResponse(res, 200, 'Gagal buat Company');
+                return response.errorResponse(res,{ message: 'Gagal buat Company' });
             }
 
             // Ambil plan
@@ -50,7 +45,7 @@ const SuperCtrl = {
             if (planError || !plan) {
                 await conn.rollback();
                 conn.release();
-                return response.errorResponse(res, 200, 'Plan tidak ditemukan');
+                return response.errorResponse(res,{ message: 'Plan tidak ditemukan' });
             }
 
             // Cek subscription aktif
@@ -58,13 +53,13 @@ const SuperCtrl = {
             if (subError) {
                 await conn.rollback();
                 conn.release();
-                return response.errorResponse(res, 200, `Gagal cek subscription: ${subError.message}`);
+                return response.errorResponse(res,{ message: `Gagal cek subscription: ${subError.message}` });
             }
 
             if (existingSub && existingSub.length > 0) {
                 await conn.rollback();
                 conn.release();
-                return response.errorResponse(res, 200, 'Company sudah memiliki subscription aktif');
+                return response.errorResponse(res,{ message: 'Company sudah memiliki subscription aktif' });
             }
 
             // Insert subscription
@@ -89,14 +84,14 @@ const SuperCtrl = {
             if (errorPlan) {
                 await conn.rollback();
                 conn.release();
-                return response.errorResponse(res, 200, `Gagal buat subscription: ${errorPlan.message}`);
+                return response.errorResponse(res,{ message: `Gagal buat subscription: ${errorPlan.message}` });
             }
 
             // Validasi employee
             if (!employee.name || !employee.phone || !employee.email || !employee.password) {
                 await conn.rollback();
                 conn.release();
-                return response.errorResponse(res, 200, 'Data employee tidak lengkap');
+                return response.errorResponse(res,{ message: 'Data employee tidak lengkap' });
             }
 
             // Insert employee
@@ -117,89 +112,22 @@ const SuperCtrl = {
             if (employeeError) {
                 await conn.rollback();
                 conn.release();
-                return response.errorResponse(res, 200, `Gagal buat employee: ${employeeError.message}`);
+                return response.errorResponse(res,{ message: `Gagal buat employee: ${employeeError.message}` });
             }
 
             await conn.commit();
             return response.successResponse(res, {
-                code: 200,
-                status: true,
                 message: '✅ Superadmin berhasil ditambahkan',
                 data: employeeData,
             });
 
         } catch (error) {
             await conn.rollback();
-            console.error('❌ Transaksi gagal:', error.message);
-            return response.errorResponse(res, 500, 'Transaksi gagal', error.message);
+            return response.errorResponse(res,{ message: `Transaksi gagal ${error.message}` });
         } finally {
             conn.release();
         }
     },
-
-
-    // ✅ Get List Superadmin (Optional)
-    async getSuperadminList(req, res) {
-        try {
-            const { data, error } = await superAdminModel.getAllSuperadmins();
-            if (error) throw error;
-
-            if (!data || data.length === 0) {
-            return response.successResponse(res, {
-                code: 200,
-                status: true,
-                message: 'Data tidak ditemukan',
-                data: [],
-            });
-            }
-
-            return response.successResponse(res, {
-            code: 200,
-            status: true,
-            message: 'Berhasil ambil data',
-            data,
-            });
-        } catch (error) {
-            return response.errorResponse(res, 500, 'Gagal ambil data superadmin', error.message);
-        }
-    },
-
-  // ✅ Get Detail by ID (Example)
-  async getSuperadminById(req, res) {
-    try {
-      const id = req.params.id;
-      const { data, error } = await superAdminModel.getSuperadminById(id);
-      if (error || !data) throw new Error('Superadmin tidak ditemukan');
-      return response.successResponse(res, { code: 200, status: true, message: 'Detail ditemukan', data });
-    } catch (error) {
-      return response.errorResponse(res, 404, 'Gagal ambil detail', error.message);
-    }
-  },
-
-  // ✅ Update Superadmin
-  async updateSuperadmin(req, res) {
-    try {
-      const id = req.params.id;
-      const { body } = req;
-      const { data, error } = await superAdminModel.updateSuperadminById(id, body);
-      if (error) throw error;
-      return response.successResponse(res, { code: 200, status: true, message: 'Berhasil update', data });
-    } catch (error) {
-      return response.errorResponse(res, 500, 'Gagal update data', error.message);
-    }
-  },
-
-  // ✅ Delete Superadmin
-  async deleteSuperadmin(req, res) {
-    try {
-      const id = req.params.id;
-      const { error } = await superAdminModel.deleteSuperadminById(id);
-      if (error) throw error;
-      return response.successResponse(res, { code: 200, status: true, message: 'Berhasil dihapus', data: {} });
-    } catch (error) {
-      return response.errorResponse(res, 500, 'Gagal hapus data', error.message);
-    }
-  }
-};
+}
 
 module.exports = SuperCtrl;

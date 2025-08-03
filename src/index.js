@@ -16,7 +16,6 @@ const port = process.env.PORT || 3000;
     connection.release();
 
     // ===== Middleware & Routing =====
-
     app.use(express.static(__dirname + '/public'));
 
     app.use(cors({
