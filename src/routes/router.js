@@ -3,7 +3,13 @@ const router = express.Router()
 const superCtrl = require('../controller/superadmin/superCtrl')
 const loginCtrl = require('../controller/loginCtrl');
 const UserCtrl = require('../controller/userCtrl');
+const planCtrl = require('../controller/planCtrl');
 
+
+
+//PLAN SUBSCRIBE
+router.route('/plan')
+  .get(planCtrl.getAllPlan);
 
 //LOGIN
 router.route('/login')
@@ -16,6 +22,8 @@ router.route('/superadmin')
 //USER
 router.route('/findUserByTokenLogin')
   .post(UserCtrl.findUserByTokenLogin);
+
+
   
 
 
