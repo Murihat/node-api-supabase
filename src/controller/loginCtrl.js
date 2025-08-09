@@ -69,7 +69,6 @@ const LoginCtrl = {
       }
 
       return response.successResponse(res, {
-        code: 200,
         status: true,
         message: 'Login berhasil.',
         data: {

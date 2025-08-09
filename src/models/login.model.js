@@ -1,4 +1,4 @@
-const db = require('../config/mysqli').pool; // sesuaikan path ini dengan konfigurasi koneksi database kamu
+const db = require('../config/mysqli').pool;
 
 const loginModel = {
   async findUserByEmailAndPassword(email, hashedPassword) {

@@ -1,8 +1,8 @@
 const express = require('express')
 const router = express.Router()
 const superCtrl = require('../controller/superadmin/superCtrl')
-const loginCtrl = require('../controller/loginCtrl')
-
+const loginCtrl = require('../controller/loginCtrl');
+const UserCtrl = require('../controller/userCtrl');
 
 
 //LOGIN
@@ -13,6 +13,9 @@ router.route('/login')
 router.route('/superadmin')
   .post(superCtrl.simpanSuperAdmin);
 
+//USER
+router.route('/findUserByTokenLogin')
+  .post(UserCtrl.findUserByTokenLogin);
   
 
 
