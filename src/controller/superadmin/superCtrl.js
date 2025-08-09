@@ -87,6 +87,33 @@ const SuperCtrl = {
                 return response.errorResponse(res,{ message: `Gagal buat subscription: ${errorPlan.message}` });
             }
 
+            // Cek apakah sudah ada super admin untuk company ini
+            const { data: existingSuperAdmin, error: checkSuperAdminError } = await superAdminModel.getCompanySuperAdmin(companyData.company_id, conn);
+            if (checkSuperAdminError) {
+                await conn.rollback();
+                conn.release();
+                return response.errorResponse(res, { message: `Gagal cek Super Admin: ${checkSuperAdminError.message}` });
+            }
+
+            if (existingSuperAdmin) {
+                await conn.rollback();
+                conn.release();
+                return response.errorResponse(res, { message: 'Company sudah memiliki Super Admin' });
+            }
+
+            // Insert atau ambil level Super Admin
+            let { data: levelData, error: levelError } = await superAdminModel.getOrCreateEmployeeLevel({
+                company_id: companyData.company_id,
+                level_name: 'Super Admin',
+                level_code: 'super_admin',
+            }, conn);
+
+            if (levelError || !levelData) {
+                await conn.rollback();
+                conn.release();
+                return response.errorResponse(res, { message: `Gagal ambil/buat level: ${levelError?.message}` });
+            }
+
             // Validasi employee
             if (!employee.name || !employee.phone || !employee.email || !employee.password) {
                 await conn.rollback();
@@ -104,7 +131,7 @@ const SuperCtrl = {
                 email: employee.email,
                 password: hashed,
                 company_id: companyData.company_id,
-                user_status_id: 1,
+                employee_level_id: levelData.employee_level_id,
                 join_date,
             };
 

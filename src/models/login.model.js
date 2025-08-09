@@ -16,6 +16,21 @@ const loginModel = {
     }
   },
 
+  async getEmployeeLevel(company_id, employee_level_id) {
+    const query = `
+      SELECT * FROM m_employee_level 
+      WHERE company_id = ? AND employee_level_id = ? 
+      LIMIT 1
+    `;
+    try {
+      const [rows] = await db.query(query, [company_id, employee_level_id]);
+      return rows[0] || null;
+    } catch (err) {
+      console.error('❌ getEmployeeLevel error:', err);
+      return null;
+    }
+  },
+
   async getActiveTokenByEmployeeId(employeeId) {
     const query = `
       SELECT * FROM m_login_token 

@@ -18,18 +18,19 @@ const LoginCtrl = {
         return response.errorResponse(res, { message: 'Email atau kata sandi salah.' });
       }
 
-      if (user.user_status_id === 1 && user.employee_level_id === null) {
-        user.role = 'superadmin';
-      } 
-      
-      if (user.user_status_id === 2 && user.employee_level_id !== null) {
-        user.role = 'employee';
+
+      const getEmployeeLevel = await loginModel.getEmployeeLevel(user.company_id, user.employee_level_id);
+
+      if (!getEmployeeLevel) {
+        return response.errorResponse(res, { message: 'Level user tidak di ketahui.' });
       }
 
-      const employeeId = user.employee_id;
+      user.employee_level_code = getEmployeeLevel.level_code;
+      user.employee_level_order = getEmployeeLevel.level_order;
+      user.role = (getEmployeeLevel.level_code.toLowerCase() == 'super_admin') ? 'super_admin' : 'employee';
 
       // Nonaktifkan token lama jika masih aktif
-      const activeToken = await loginModel.getActiveTokenByEmployeeId(employeeId);
+      const activeToken = await loginModel.getActiveTokenByEmployeeId(user.employee_id);
 
       // const now = new Date();
       // if (new Date(activeToken.token_expired_at) <= now) {
@@ -53,7 +54,7 @@ const LoginCtrl = {
 
       // Simpan token beserta informasi tambahan
       const inserted = await loginModel.createLoginTokenWithMeta({
-        employee_id: employeeId,
+        employee_id: user.employee_id,
         token,
         token_expired_at: expiredAt,
         ip_address: ipAddress,
