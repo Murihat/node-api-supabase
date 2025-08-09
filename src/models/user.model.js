@@ -17,6 +17,7 @@ const userModel = {
 
                             edp.department_name,
 
+                            eml.level_name              AS employee_level_name,
                             eml.level_code              AS employee_level_code,
                             eml.level_order             AS employee_level_order,
 
