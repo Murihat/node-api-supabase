@@ -130,7 +130,7 @@ const EmployeeLevelCtrl = {
         const { token, employee_level_id, level_name, level_code, level_order, is_active } = req.body;
 
         // Validasi input minimal
-        if (!token || !employee_level_id || !level_name || !level_code || !level_order || !is_active) {
+        if (!token || !employee_level_id || !level_name || !level_code || !level_order) {
             return response.errorResponse(res, { message: 'Data tidak boleh kosong' });
         }
 

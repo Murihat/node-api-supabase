@@ -130,7 +130,7 @@ const DepartmentCtrl = {
         const { token, department_id, department_name, department_code, is_active } = req.body;
 
         // Validasi input minimal
-        if (!token || !department_id || !department_name || !department_code || !is_active) {
+        if (!token || !department_id || !department_name || !department_code) {
             return response.errorResponse(res, { message: 'Data tidak boleh kosong' });
         }
 
