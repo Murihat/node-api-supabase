@@ -100,8 +100,8 @@ const DepartmentCtrl = {
 
         const isExistingDepartment = await DepartmentModel.findDepartmentSingle(
             dataUser.employee_company_id,
-            department_code,
-            department_name
+            department_name,
+            department_code
         );
 
         if (isExistingDepartment) {

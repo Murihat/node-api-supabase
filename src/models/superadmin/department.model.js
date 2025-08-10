@@ -1,7 +1,7 @@
 const db = require('../../config/mysqli').pool;
 
 const DepartmentModel = {
-    async findDepartmentSingle(company_id, department_code, department_name) {
+    async findDepartmentSingle(company_id, department_name, department_code ) {
         const query = `
             SELECT * 
             FROM m_department 
@@ -13,7 +13,7 @@ const DepartmentModel = {
         `;
 
         try {
-            const [rows] = await db.query(query, [company_id, department_code, department_name]);
+            const [rows] = await db.query(query, [company_id, department_name, department_code]);
             return rows.length > 0 ? rows[0] : null;
         } catch (error) {
             console.error('❌ findDepartmentSingle error:', error);
@@ -21,9 +21,9 @@ const DepartmentModel = {
         }
     },
 
-    async insertDepartment(company_id, department_code, department_name) {
+    async insertDepartment(company_id, department_name, department_code) {
         const insertQuery = `
-            INSERT INTO m_department (company_id, department_code, department_name, is_active, created_at)
+            INSERT INTO m_department (company_id, department_name, department_code, is_active, created_at)
             VALUES (?, ?, ?, 1, NOW())
         `;
 
@@ -31,8 +31,8 @@ const DepartmentModel = {
             // 1. Insert data baru
             const [result] = await db.query(insertQuery, [
                 company_id,
+                department_name,
                 department_code,
-                department_name
             ]);
 
             // 2. Ambil data yang baru diinsert
@@ -65,8 +65,8 @@ const DepartmentModel = {
         const query = `
                         SELECT 
                             department_id,
-                            department_code,
                             department_name,
+                            department_code,
                             is_active,
                             created_at
                         FROM m_department
