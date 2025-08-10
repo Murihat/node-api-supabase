@@ -67,6 +67,7 @@ const DepartmentModel = {
                             department_id,
                             department_code,
                             department_name,
+                            is_active,
                             created_at
                         FROM m_department
                         ${whereClause}
