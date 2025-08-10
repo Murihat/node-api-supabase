@@ -5,6 +5,7 @@ const loginCtrl = require('../controller/loginCtrl');
 const UserCtrl = require('../controller/userCtrl');
 const planCtrl = require('../controller/planCtrl');
 const departmentCtrl = require('../controller/superadmin/departmentCtrl');
+const EmployeeLevelCtrl = require('../controller/superadmin/employeeLevelCtrl');
 
 
 
@@ -16,8 +17,6 @@ router.route('/plan')
 router.route('/login')
   .post(loginCtrl.loginAction);
 
-
-
 //SUPERADMIN
 router.route('/superadmin')
   .post(superCtrl.simpanSuperAdmin);
@@ -27,6 +26,12 @@ router.route('/department')
   .get(departmentCtrl.findAllDepartment)
   .put(departmentCtrl.editDepartment)
   .post(departmentCtrl.saveDepartment);
+
+//EMPLOYEE LEVEL
+router.route('/employeeLevel')
+  .get(EmployeeLevelCtrl.findAllEmployeeLevel)
+  .put(EmployeeLevelCtrl.editEmployeeLevel)
+  .post(EmployeeLevelCtrl.saveEmployeeLevel);
 
 
 

@@ -1,10 +1,10 @@
 const { hashPassword, generateToken } = require('../../helpers/tokenHelper');
 const response = require('../../helpers/response');
 const tokenCtrl = require('../tokenCtrl');
-const DepartmentModel = require('../../models/superadmin/department.model');
+const EmployeeLevelModel = require('../../models/superadmin/employeeLevel.model');
 
-const DepartmentCtrl = {
-    async  findAllDepartment(req, res) {
+const EmployeeLevelCtrl = {
+    async  findAllEmployeeLevel(req, res) {
         const token = req.query.token || req.body?.token;
 
         // Pagination & filter
@@ -13,7 +13,7 @@ const DepartmentCtrl = {
         const search = (req.query.search ?? req.body?.search ?? '').trim();
 
         // Sorting whitelist
-        const allowedSortBy = new Set(['created_at', 'department_name', 'department_code']);
+        const allowedSortBy = new Set(['created_at', 'level_name', 'level_code', 'level_order']);
         const sort_by = (req.query.sort_by ?? req.body?.sort_by ?? 'created_at').toString();
         const sort_dir_raw = (req.query.sort_dir ?? req.body?.sort_dir ?? 'DESC').toString().toUpperCase();
         const sort_dir = sort_dir_raw === 'DESC' ? 'DESC' : 'ASC';
@@ -40,10 +40,10 @@ const DepartmentCtrl = {
 
         try {
             // Hitung total
-            const total = await DepartmentModel.countDepartment(companyId, { search });
+            const total = await EmployeeLevelModel.countEmployeeLevel(companyId, { search });
 
             // Ambil data
-            const rows = await DepartmentModel.findAllDepartment(companyId, {
+            const rows = await EmployeeLevelModel.findAllEmployeeLevel(companyId, {
                 search,
                 sortBy,
                 sortDir: sort_dir,
@@ -70,16 +70,16 @@ const DepartmentCtrl = {
                 },
             });
         } catch (error) {
-            console.error('❌ findAllDepartment error:', error);
-            return response.errorResponse(res, { message: 'Gagal memuat data department.' });
+            console.error('❌ findAllEmployeeLevel error:', error);
+            return response.errorResponse(res, { message: 'Gagal memuat data employee level.' });
         }
     },
 
-    async saveDepartment(req, res) {
-        const { token, department_name, department_code } = req.body;
+    async saveEmployeeLevel(req, res) {
+        const { token, level_name, level_code } = req.body;
 
-       if (!token || !department_name || !department_code) {
-            return response.errorResponse(res, {  message: 'Semua data wajib diisi',});
+       if (!token || !level_name || !level_code) {
+            return response.errorResponse(res, {  message: 'Semua data wajib di isi',});
        }
 
         const isValidToken = await tokenCtrl.validateTokenLogin(token);
@@ -95,42 +95,42 @@ const DepartmentCtrl = {
         }
 
         if (dataUser.employee_level_code !== "super_admin") {
-            return response.errorResponse(res, { message: "Hanya superadmin yang boleh insert department",});
+            return response.errorResponse(res, { message: "Hanya superadmin yang boleh insert employee level",});
         }
 
-        const isExistingDepartment = await DepartmentModel.findDepartmentSingle(
+        const isExisting = await EmployeeLevelModel.findEmployeeLevelSingle(
             dataUser.employee_company_id,
-            department_name,
-            department_code
+            level_name,
+            level_code
         );
 
-        if (isExistingDepartment) {
-            return response.errorResponse(res, {message: `Department ${isExistingDepartment.department_name} sudah tersedia`,});
+        if (isExisting) {
+            return response.errorResponse(res, {message: `EmployeeLevel ${isExisting.level_name} sudah tersedia`,});
         }
 
-        const insertDepartment = await DepartmentModel.insertDepartment(
+        const insertEmployeeLevel = await EmployeeLevelModel.insertEmployeeLevel(
             dataUser.employee_company_id,
-            department_name,
-            department_code
+            level_name,
+            level_code
         );
 
-        if (!insertDepartment || insertDepartment.error) {
-            return response.errorResponse(res, {message: `Maaf gagal insert department!`,});
+        if (!insertEmployeeLevel || insertEmployeeLevel.error) {
+            return response.errorResponse(res, {message: `Maaf gagal insert EmployeeLevel!`,});
         }
 
         return response.successResponse(res, {
             status: true,
             message: 'Successfully',
-            data: insertDepartment,
+            data: insertEmployeeLevel,
         });
 
     },
 
-    async editDepartment(req, res) {
-        const { token, department_id, department_name, department_code, is_active } = req.body;
+    async editEmployeeLevel(req, res) {
+        const { token, employee_level_id, level_name, level_code, level_order, is_active } = req.body;
 
         // Validasi input minimal
-        if (!token || !department_id || !department_name || !department_code || !is_active) {
+        if (!token || !employee_level_id || !level_name || !level_code || !level_order || !is_active) {
             return response.errorResponse(res, { message: 'Data tidak boleh kosong' });
         }
 
@@ -148,26 +148,35 @@ const DepartmentCtrl = {
 
         // Hak akses
         if (dataUser.employee_level_code !== 'super_admin') {
-            return response.errorResponse(res, { message: 'Hanya superadmin yang boleh edit department' });
+            return response.errorResponse(res, { message: 'Hanya superadmin yang boleh edit employee level' });
         }
         
         const companyId = dataUser.employee_company_id;
 
-        // Validasi department
-       const isExisting = await DepartmentModel.findDepartmentById(
-            department_id,
+        // Validasi employee level
+       const isExisting= await EmployeeLevelModel.findEmployeeLevelById(
+            employee_level_id,
             companyId,
         );
 
         if (!isExisting || isExisting.error) {
-            return response.errorResponse(res, {message: `Department ${department_name} tidak tersedia`,});
+            return response.errorResponse(res, {message: `Employee Level ${level_name} tidak tersedia`,});
         }
 
+        
+        // Cek apakah level_order yang diminta sudah dipakai oleh record lain di company yang sama
+        const isDup = await EmployeeLevelModel.existsLevelOrder(companyId, level_order, employee_level_id);
+        if (isDup) {
+            return response.errorResponse(res, { message: 'Employee level order sudah digunakan' });
+        }
+
+
+
         // Update
-        const updated = await DepartmentModel.updateDepartmentById(department_id, companyId, department_name, department_code, is_active);
+        const updated = await EmployeeLevelModel.updateEmployeeLevelById(employee_level_id, companyId, level_name, level_code, level_order, is_active);
 
         if (!updated || updated.error) {
-            return response.errorResponse(res, { message: 'Gagal mengubah department' });
+            return response.errorResponse(res, { message: 'Gagal mengubah Employee Level' });
         }
 
         return response.successResponse(res, {
@@ -179,4 +188,4 @@ const DepartmentCtrl = {
 
 }
 
-module.exports = DepartmentCtrl;
+module.exports = EmployeeLevelCtrl;
