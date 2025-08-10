@@ -25,6 +25,7 @@ router.route('/superadmin')
 //DEPARTMENT
 router.route('/department')
   .get(departmentCtrl.findAllDepartment)
+  .put(departmentCtrl.editDepartment)
   .post(departmentCtrl.saveDepartment);
 
 

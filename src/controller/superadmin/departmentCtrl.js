@@ -124,7 +124,59 @@ const DepartmentCtrl = {
             data: insertDepartment,
         });
 
+    },
+
+    async editDepartment(req, res) {
+        const { token, department_id, department_name, department_code, is_active } = req.body;
+
+        // Validasi input minimal
+        if (!token || !department_id || !department_name || !department_code || !is_active) {
+            return response.errorResponse(res, { message: 'Data tidak boleh kosong' });
+        }
+
+        // Validasi token
+        const isValidToken = await tokenCtrl.validateTokenLogin(token);
+        if (!isValidToken) {
+            return response.errorResponse(res, { message: 'Token tidak valid atau sudah kadaluarsa.' });
+        }
+
+        // Ambil user
+        const dataUser = await tokenCtrl.findUserByTokenLogin(token);
+        if (!dataUser) {
+            return response.errorResponse(res, { message: 'Data user tidak ditemukan.' });
+        }
+
+        // Hak akses
+        if (dataUser.employee_level_code !== 'super_admin') {
+            return response.errorResponse(res, { message: 'Hanya superadmin yang boleh edit department' });
+        }
+        
+        const companyId = dataUser.employee_company_id;
+
+        // Validasi department
+       const isExistingDepartment = await DepartmentModel.findDepartmentById(
+            department_id,
+            companyId,
+        );
+
+        if (!isExistingDepartment) {
+            return response.errorResponse(res, {message: `Department ${department_name} tidak tersedia`,});
+        }
+
+        // Update
+        const updated = await DepartmentModel.updateDepartmentById(department_id, companyId, department_name, department_code, is_active);
+
+        if (!updated || updated.error) {
+            return response.errorResponse(res, { message: 'Gagal mengubah department' });
+        }
+
+        return response.successResponse(res, {
+            status: true,
+            message: 'Successfully',
+            data: updated,
+        });
     }
+
 }
 
 module.exports = DepartmentCtrl;

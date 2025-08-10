@@ -112,6 +112,70 @@ const DepartmentModel = {
             throw error;
         }
     },
+
+
+     async findDepartmentById(department_id, company_id) {
+        const query = `
+            SELECT * 
+            FROM m_department 
+            WHERE department_id = ? 
+            AND company_id = ? 
+            ORDER BY created_at ASC
+            LIMIT 1
+        `;
+
+        try {
+            const [rows] = await db.query(query, [department_id, company_id]);
+            return rows.length > 0 ? rows[0] : null;
+        } catch (error) {
+            console.error('❌ findDepartmentSingle error:', error);
+            return { error };
+        }
+    },
+
+
+    async updateDepartmentById(department_id, company_id, department_name, department_code, is_active) {
+        const updateQuery = `
+            UPDATE m_department 
+            SET 
+                department_name = ?,
+                department_code = ?,
+                is_active = ?,
+                updated_at = NOW()
+            WHERE 
+                department_id = ? AND 
+                company_id = ?
+        `;
+
+        try {
+            const [result] = await db.query(updateQuery, [
+                department_name,
+                department_code,
+                is_active,
+                department_id,
+                company_id
+            ]);
+
+            if (result.affectedRows === 0) return null;
+            
+
+            // kembalikan row terbaru
+            const [rows] = await db.query(
+                `SELECT department_id, department_code, department_name, is_active, created_at, updated_at
+                FROM m_department
+                WHERE company_id = ? AND department_id = ?
+                LIMIT 1`,
+                [company_id, department_id]
+            );
+            
+            return rows.length ? rows[0] : null;
+
+        } catch (error) {
+            console.error('❌ updateDepartmentById error:', error);
+            return { error };
+        }
+
+    }
 }
 
 module.exports = DepartmentModel;
