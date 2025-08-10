@@ -15,7 +15,7 @@ const DepartmentCtrl = {
         // Sorting whitelist
         const allowedSortBy = new Set(['created_at', 'department_name', 'department_code']);
         const sort_by = (req.query.sort_by ?? req.body?.sort_by ?? 'created_at').toString();
-        const sort_dir_raw = (req.query.sort_dir ?? req.body?.sort_dir ?? 'ASC').toString().toUpperCase();
+        const sort_dir_raw = (req.query.sort_dir ?? req.body?.sort_dir ?? 'DESC').toString().toUpperCase();
         const sort_dir = sort_dir_raw === 'DESC' ? 'DESC' : 'ASC';
         const sortBy = allowedSortBy.has(sort_by) ? sort_by : 'created_at';
 
