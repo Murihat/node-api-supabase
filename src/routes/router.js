@@ -4,6 +4,7 @@ const superCtrl = require('../controller/superadmin/superCtrl')
 const loginCtrl = require('../controller/loginCtrl');
 const UserCtrl = require('../controller/userCtrl');
 const planCtrl = require('../controller/planCtrl');
+const departmentCtrl = require('../controller/superadmin/departmentCtrl');
 
 
 
@@ -15,9 +16,18 @@ router.route('/plan')
 router.route('/login')
   .post(loginCtrl.loginAction);
 
+
+
 //SUPERADMIN
 router.route('/superadmin')
   .post(superCtrl.simpanSuperAdmin);
+
+//DEPARTMENT
+router.route('/department')
+  .get(departmentCtrl.findAllDepartment)
+  .post(departmentCtrl.saveDepartment);
+
+
 
 //USER
 router.route('/findUserByTokenLogin')

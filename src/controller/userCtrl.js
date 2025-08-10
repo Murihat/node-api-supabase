@@ -1,6 +1,5 @@
 const { hashPassword, generateToken } = require('../helpers/tokenHelper');
 const response = require('../helpers/response');
-const userModel = require('../models/user.model');
 const tokenCtrl = require('./tokenCtrl');
 
 const UserCtrl = {
@@ -18,7 +17,7 @@ const UserCtrl = {
             return response.errorResponse(res, { message: 'Token tidak valid atau sudah kadaluarsa.' });
         }
 
-        const dataUser = await userModel.findUserByTokenLogin(token);
+        const dataUser = await tokenCtrl.findUserByTokenLogin(token);
 
         if (!dataUser) {
             return response.errorResponse(res, { message: 'Data tidak tersedia.' });

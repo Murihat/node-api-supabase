@@ -15,6 +15,17 @@ const tokenCtrl = {
         }
        
         return true;
+    },
+
+
+    async findUserByTokenLogin(token) {
+        if (!token) {
+            return response.errorResponse(res, { message: 'Token tidak boleh kosong.' });
+        }
+
+        const dataUser  = await tokenModel.findUserByTokenLogin(token);
+
+        return dataUser || null;
     }
 }
 

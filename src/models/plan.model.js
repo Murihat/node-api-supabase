@@ -2,8 +2,6 @@ const db = require('../config/mysqli').pool;
 
 const planModel = {
     async findAllPlan() {
-
-        
         const query = `
                     SELECT * FROM tb_company_plan 
                     WHERE is_active = 1 
