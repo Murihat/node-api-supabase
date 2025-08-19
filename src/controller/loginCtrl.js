@@ -40,7 +40,8 @@ const LoginCtrl = {
       // }
 
       if (activeToken) {
-        await loginModel.deactivateTokenByLoginId(activeToken.login_id);
+        // await loginModel.deactivateTokenByLoginId(activeToken.login_id);
+         await loginModel.deleteTokenByLoginId(activeToken.login_id);
       }
 
       // Data tambahan dari header

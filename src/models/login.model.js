@@ -47,6 +47,22 @@ const loginModel = {
     }
   },
 
+  async deleteTokenByLoginId(loginId) {
+    const query = `
+      DELETE FROM m_login_token 
+      WHERE login_id = ?
+    `;
+    try {
+      const [result] = await db.query(query, [loginId]);
+      // result.affectedRows > 0 artinya ada row yang terhapus
+      return result.affectedRows > 0;
+    } catch (err) {
+      console.error('❌ deleteTokenByLoginId error:', err);
+      return false;
+    }
+  },
+
+
   async deactivateTokenByLoginId(loginId) {
     const query = `
       UPDATE m_login_token 
