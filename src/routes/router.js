@@ -6,6 +6,8 @@ const UserCtrl = require('../controller/userCtrl');
 const planCtrl = require('../controller/planCtrl');
 const departmentCtrl = require('../controller/superadmin/departmentCtrl');
 const EmployeeLevelCtrl = require('../controller/superadmin/employeeLevelCtrl');
+const EmployeeCtrl = require('../controller/superadmin/employeeCtrl');
+const { uploadSingleImage } = require('../controller/imageUploadCtrl');
 
 
 
@@ -32,6 +34,13 @@ router.route('/employeeLevel')
   .get(EmployeeLevelCtrl.findAllEmployeeLevel)
   .put(EmployeeLevelCtrl.editEmployeeLevel)
   .post(EmployeeLevelCtrl.saveEmployeeLevel);
+
+
+//EMPLOYEE
+router.route('/employee')
+  .get(EmployeeCtrl.findAllEmployee)
+  .put(EmployeeCtrl.editEmployee)
+  .post(uploadSingleImage, EmployeeCtrl.saveEmployee);
 
 
 

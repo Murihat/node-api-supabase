@@ -31,7 +31,8 @@ const tokenModel = {
                             emp.picture                 AS employee_picture,
 
                             edp.department_name,
-
+                            
+                            eml.employee_level_id        AS employee_level_id,
                             eml.level_name              AS employee_level_name,
                             eml.level_code              AS employee_level_code,
                             eml.level_order             AS employee_level_order,

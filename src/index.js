@@ -50,6 +50,12 @@ const port = process.env.PORT || 3000;
       res.sendFile(__dirname + '/public/views/index.html');
     });
 
+    // const path = require('path');
+    // const UPLOADS_ROOT = path.resolve(process.cwd(), 'uploads');
+
+    // app.use('/uploads', express.static(UPLOADS_ROOT));
+
+
     app.listen(port, () => {
       console.log(`🚀 Server ready at http://localhost:${port}`);
     });
