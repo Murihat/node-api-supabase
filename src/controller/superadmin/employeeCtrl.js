@@ -52,11 +52,21 @@ const EmployeeCtrl = {
                 offset: (page - 1) * limit,
             });
 
+            // Mapping picture jadi absolute URL
+            const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
+
+            const mappedRows = rows.map(emp => ({
+            ...emp,
+            picture: emp.picture 
+                ? `${BASE_URL}/${emp.picture}` 
+                : null,
+            }));
+
             return response.successResponse(res, {
                 status: true,
                 message: 'Successfully',
                 data: {
-                    items: rows,
+                    items: mappedRows,
                     pagination: {
                     page,
                     limit,
@@ -154,7 +164,7 @@ const EmployeeCtrl = {
 
         const createdEmployeeId = insertEmployee.employee_id;
         let savedImage = null;
-        
+
         // 4) Jika ada file gambar, simpan ke folder per company + nama file per employee
         if (req.file?.buffer && req.file?.mimetype) {
             try {
@@ -200,55 +210,138 @@ const EmployeeCtrl = {
 
 
     async editEmployee(req, res) {
-        const { token, department_id, department_name, department_code, is_active } = req.body;
-
-        // Validasi input minimal
-        if (!token || !department_id || !department_name || !department_code) {
-            return response.errorResponse(res, { message: 'Data tidak boleh kosong' });
-        }
-
-        // Validasi token
-        const isValidToken = await tokenCtrl.validateTokenLogin(token);
-        if (!isValidToken) {
-            return response.errorResponse(res, { message: 'Token tidak valid atau sudah kadaluarsa.' });
-        }
-
-        // Ambil user
-        const dataUser = await tokenCtrl.findUserByTokenLogin(token);
-        if (!dataUser) {
-            return response.errorResponse(res, { message: 'Data user tidak ditemukan.' });
-        }
-
-        // Hak akses
-        if (dataUser.employee_level_code !== 'super_admin') {
-            return response.errorResponse(res, { message: 'Hanya superadmin yang boleh edit department' });
-        }
-        
-        const companyId = dataUser.employee_company_id;
-
-        // Validasi department
-       const isExisting = await DepartmentModel.findDepartmentById(
+        const {
+            token,
+            employee_id,           
+            name,
+            phone,
+            email,
+            password,              
+            join_date,
+            employee_level_id,
             department_id,
-            companyId,
-        );
+            job_title,
+        } = req.body;
 
-        if (!isExisting || isExisting.error) {
-            return response.errorResponse(res, {message: `Department ${department_name} tidak tersedia`,});
+        if (!token || !employee_id) {
+            return response.errorResponse(res, { message: "Token dan employee_id wajib diisi" });
         }
 
-        // Update
-        const updated = await DepartmentModel.updateDepartmentById(department_id, companyId, department_name, department_code, is_active);
+        try {
+            // 1) Validasi token & role
+            const isValidToken = await tokenCtrl.validateTokenLogin(token);
+            if (!isValidToken) {
+                return response.errorResponse(res, { message: "Token tidak valid atau sudah kadaluarsa." });
+            }
 
-        if (!updated || updated.error) {
-            return response.errorResponse(res, { message: 'Gagal mengubah department' });
+            const dataUser = await tokenCtrl.findUserByTokenLogin(token);
+            if (!dataUser) {
+                return response.errorResponse(res, { message: "Data user tidak ditemukan." });
+            }
+
+            if (dataUser.employee_level_code !== "super_admin") {
+                return response.errorResponse(res, { message: "Hanya superadmin yang boleh mengedit employee." });
+            }
+
+            // 2) Ambil data employee yang akan diedit (harus dalam company yang sama)
+            const existingEmployee = await EmployeeModel.findEmployeeById(
+                employee_id,
+                dataUser.employee_company_id
+            );
+
+            if (!existingEmployee) {
+                return response.errorResponse(res, { message: "Employee tidak ditemukan." });
+            }
+
+            // 3) Jika email diubah, cek sudah dipakai atau belum (unik per company)
+            if (email && email !== existingEmployee.email) {
+                const emailTaken = await EmployeeModel.findEmployeeSingle(
+                    dataUser.employee_company_id,
+                    { email }
+                );
+
+                if (emailTaken) {
+                    return response.errorResponse(res, { message: `Email ${email} sudah digunakan.` });
+                }
+            }
+
+            // 4) Siapkan payload update (hanya field yang dikirim)
+            const updatePayload = {};
+            if (typeof name !== "undefined") updatePayload.name = name;
+            if (typeof phone !== "undefined") updatePayload.phone = phone;
+            if (typeof email !== "undefined") updatePayload.email = email;
+            if (typeof join_date !== "undefined") updatePayload.join_date = join_date;
+            if (typeof employee_level_id !== "undefined") updatePayload.employee_level_id = employee_level_id;
+            if (typeof department_id !== "undefined") updatePayload.department_id = department_id;
+            if (typeof job_title !== "undefined") updatePayload.job_title = job_title;
+
+            // 5) Password: jika dikirim, cek sama/tidak dengan yang lama
+            if (typeof password !== "undefined" && password !== null && String(password).trim() !== "") {
+                // compare dengan hash lama
+                const isSame = await comparePassword(password, existingEmployee.password); // pastikan ada helper comparePassword(bcrypt.compare)
+                if (!isSame) {
+                    updatePayload.password = await hashPassword(password);
+                }
+                // jika sama → tidak set password (biarkan kosong agar tidak mengubah)
+            }
+
+            // 6) Picture: jika ada file baru → simpan & replace
+            let savedImage = null;
+            if (req.file?.buffer && req.file?.mimetype) {
+                try {
+                    savedImage = await saveEmployeeImageBuffer({
+                    req,
+                    buffer: req.file.buffer,
+                    mime: req.file.mimetype,
+                    companyId: dataUser.employee_company_id,
+                    employeeId: existingEmployee.employee_id,
+                    });
+                    updatePayload.picture = savedImage.publicUrl;
+                } catch (imgErr) {
+                    console.error("Gagal mengganti foto employee:", imgErr);
+                    // Tidak gagal total; lanjutkan tanpa update picture
+                }
+            }
+
+            // Jika tidak ada field yang berubah sama sekali
+            if (Object.keys(updatePayload).length === 0) {
+                return response.successResponse(res, {
+                    status: true,
+                    message: "Tidak ada perubahan data.",
+                    data: existingEmployee,
+                });
+            }
+
+            // 7) Eksekusi update
+            const updated = await EmployeeModel.updateEmployeeById(
+                existingEmployee.employee_id,
+                dataUser.employee_company_id,
+                updatePayload
+            );
+
+            if (!updated || updated.error) {
+                return response.errorResponse(res, { message: "Maaf gagal update data employee!" });
+            }
+
+            // Buat respons final (gabungkan yang lama + perubahan)
+            const result = {
+                ...existingEmployee,
+                ...updatePayload,
+            };
+
+            return response.successResponse(res, {
+                        status: true,
+                        message: "Successfully updated employee",
+                        data: result,
+                    });
+        } catch (err) {
+            console.error("❌ editEmployee error:", err);
+            return response.errorResponse(res, {
+                message: err.message || "Terjadi kesalahan saat update employee.",
+            });
         }
-
-        return response.successResponse(res, {
-            status: true,
-            message: 'Successfully',
-            data: updated,
-        });
     }
+
 }
 
 module.exports = EmployeeCtrl;

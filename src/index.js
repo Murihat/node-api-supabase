@@ -52,7 +52,6 @@ const port = process.env.PORT || 3000;
 
     // const path = require('path');
     // const UPLOADS_ROOT = path.resolve(process.cwd(), 'uploads');
-
     // app.use('/uploads', express.static(UPLOADS_ROOT));
 
 
