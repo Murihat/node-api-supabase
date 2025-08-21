@@ -221,6 +221,7 @@ const EmployeeCtrl = {
             employee_level_id,
             department_id,
             job_title,
+            is_active,
         } = req.body;
 
         if (!token || !employee_id) {
@@ -274,6 +275,7 @@ const EmployeeCtrl = {
             if (typeof employee_level_id !== "undefined") updatePayload.employee_level_id = employee_level_id;
             if (typeof department_id !== "undefined") updatePayload.department_id = department_id;
             if (typeof job_title !== "undefined") updatePayload.job_title = job_title;
+            if (typeof is_active !== "undefined") updatePayload.is_active = is_active;
 
             // 5) Password: jika dikirim, cek sama/tidak dengan yang lama
             if (typeof password !== "undefined" && password !== null && String(password).trim() !== "") {
