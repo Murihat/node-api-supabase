@@ -293,61 +293,84 @@ const EmployeeModel = {
     },
 
 
-  // Update by id + company (tanpa ubah password — sediakan method terpisah jika perlu)
-  async updateEmployeeById(employee_id, company_id, payload = {}) {
-    // whitelist kolom yang boleh diupdate
-    const allow = [
-      'employee_code', 'name', 'email', 'phone', 'identity_card', 'picture',
-      'job_title', 'is_active', 'join_date', 'end_date',
-      'employee_level_id', 'department_id'
-    ];
+    // EmployeeModel.js
+    async updateEmployeeById(employee_id, company_id, payload = {}) {
+        // whitelist kolom yang boleh diupdate
+        const allow = [
+            'employee_code', 'name', 'email', 'phone', 'identity_card', 'picture',
+            'job_title', 'is_active', 'join_date', 'end_date',
+            'employee_level_id', 'department_id'
+        ];
 
-    const sets = [];
-    const params = [];
+        // Jika controller menyertakan password (sudah di-hash di controller), izinkan
+        if (Object.prototype.hasOwnProperty.call(payload, 'password')) {
+            allow.push('password');
+        }
 
-    for (const key of allow) {
-      if (Object.prototype.hasOwnProperty.call(payload, key)) {
-        sets.push(`${key} = ?`);
-        params.push(payload[key]);
-      }
-    }
+        // (Opsional) normalisasi tanggal jika perlu
+        const normalizeDate = (v) => {
+            if (v instanceof Date && !isNaN(v)) {
+            // YYYY-MM-DD
+            const y = v.getFullYear();
+            const m = String(v.getMonth() + 1).padStart(2, '0');
+            const d = String(v.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+            }
+            return v;
+        };
 
-    if (sets.length === 0) {
-      return null; // tidak ada perubahan
-    }
+        const sets = [];
+        const params = [];
 
-    const updateQuery = `
-      UPDATE tb_employee
-      SET ${sets.join(', ')}, updated_at = NOW()
-      WHERE employee_id = ? AND company_id = ?
-    `;
+        for (const key of allow) {
+            if (Object.prototype.hasOwnProperty.call(payload, key)) {
+            // Catatan: kita tetap push meski nilainya null (agar bisa null-kan kolom)
+            const val = (key === 'join_date' || key === 'end_date')
+                ? normalizeDate(payload[key])
+                : payload[key];
 
-    params.push(employee_id, company_id);
+            sets.push(`${key} = ?`);
+            params.push(val);
+            }
+        }
 
-    try {
-      const [result] = await db.query(updateQuery, params);
-      if (result.affectedRows === 0) return null;
+        if (sets.length === 0) {
+            return null; // tidak ada perubahan
+        }
 
-      const [rows] = await db.query(
-        `
-        SELECT 
-          employee_id, employee_code, name, email, phone, identity_card, picture,
-          job_title, is_active, join_date, end_date,
-          company_id, employee_level_id, department_id,
-          created_at, updated_at
-        FROM tb_employee
-        WHERE employee_id = ? AND company_id = ?
-        LIMIT 1
-        `,
-        [employee_id, company_id]
-      );
+        const updateQuery = `
+            UPDATE tb_employee
+            SET ${sets.join(', ')}, updated_at = NOW()
+            WHERE employee_id = ? AND company_id = ?
+        `;
 
-      return rows.length ? rows[0] : null;
-    } catch (error) {
-      console.error('❌ EmployeeModel.updateEmployeeById error:', error);
-      return { error };
-    }
-  },
+        params.push(employee_id, company_id);
+
+        try {
+            const [result] = await db.query(updateQuery, params);
+            if (result.affectedRows === 0) return null;
+
+            const [rows] = await db.query(
+            `
+            SELECT 
+                employee_id, employee_code, name, email, phone, identity_card, picture,
+                job_title, is_active, join_date, end_date,
+                company_id, employee_level_id, department_id,
+                created_at, updated_at
+            FROM tb_employee
+            WHERE employee_id = ? AND company_id = ?
+            LIMIT 1
+            `,
+            [employee_id, company_id]
+            );
+
+            return rows.length ? rows[0] : null;
+        } catch (error) {
+            console.error('❌ EmployeeModel.updateEmployeeById error:', error);
+            return { error };
+        }
+    },
+
 
   // (Opsional) Update password (hash sudah diproses di layer service)
   async updateEmployeePassword(employee_id, company_id, hashedPassword) {

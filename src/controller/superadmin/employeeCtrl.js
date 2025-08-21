@@ -1,4 +1,4 @@
-const { hashPassword, generateToken } = require('../../helpers/tokenHelper');
+const { hashPassword, comparePassword } = require('../../helpers/tokenHelper');
 const response = require('../../helpers/response');
 const tokenCtrl = require('../tokenCtrl');
 const EmployeeModel = require('../../models/superadmin/employee.model');
@@ -290,11 +290,11 @@ const EmployeeCtrl = {
             if (req.file?.buffer && req.file?.mimetype) {
                 try {
                     savedImage = await saveEmployeeImageBuffer({
-                    req,
-                    buffer: req.file.buffer,
-                    mime: req.file.mimetype,
-                    companyId: dataUser.employee_company_id,
-                    employeeId: existingEmployee.employee_id,
+                        req,
+                        buffer: req.file.buffer,
+                        mime: req.file.mimetype,
+                        companyId: dataUser.employee_company_id,
+                        employeeId: existingEmployee.employee_id,
                     });
                     updatePayload.picture = savedImage.publicUrl;
                 } catch (imgErr) {
@@ -325,7 +325,6 @@ const EmployeeCtrl = {
 
             // Buat respons final (gabungkan yang lama + perubahan)
             const result = {
-                ...existingEmployee,
                 ...updatePayload,
             };
 

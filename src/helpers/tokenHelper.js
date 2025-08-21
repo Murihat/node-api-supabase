@@ -8,4 +8,15 @@ function generateToken() {
   return crypto.randomBytes(32).toString('hex')
 }
 
-module.exports = { hashPassword, generateToken }
+async function comparePassword(plainPassword, hashedPassword) {
+  if (!plainPassword || !hashedPassword) return false;
+  try {
+    return await bcrypt.compare(plainPassword, hashedPassword);
+  } catch (err) {
+    console.error("❌ comparePassword error:", err);
+    return false;
+  }
+}
+
+
+module.exports = { hashPassword, generateToken, comparePassword }

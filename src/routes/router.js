@@ -39,7 +39,7 @@ router.route('/employeeLevel')
 //EMPLOYEE
 router.route('/employee')
   .get(EmployeeCtrl.findAllEmployee)
-  .put(EmployeeCtrl.editEmployee)
+  .put(uploadSingleImage, EmployeeCtrl.editEmployee)
   .post(uploadSingleImage, EmployeeCtrl.saveEmployee);
 
 
